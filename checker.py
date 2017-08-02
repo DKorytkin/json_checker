@@ -9,7 +9,7 @@ DICT_ERROR_TEMPLATE = 'From key="{}"\n\t{}'
 REPR_TEMPLATE = u'{class_name}({current})'
 
 
-class JsonCheckerException(Exception):
+class CheckerException(Exception):
 
     def __init__(self, errors):
         self.errors = errors
@@ -129,7 +129,7 @@ class Validator(object):
         return self.errors
 
 
-class JsonChecker(object):
+class Checker(object):
 
     def __init__(self, current_data):
         self.current_data = current_data
@@ -144,5 +144,5 @@ class JsonChecker(object):
         checker = Validator(self.current_data)
         result = checker.validate(expected_data)
         if result:
-            raise JsonCheckerException(result)
+            raise CheckerException(result)
         return self.current_data
