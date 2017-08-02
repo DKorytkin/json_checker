@@ -32,9 +32,9 @@ class BaseChecker(object):
 
     def _format_errors(self):
         if self.errors:
-            return '{}Errors:\n{}'.format(
+            return '{}Errors:\n\t{}'.format(
                 self.__class__.__name__,
-                '\n'.join(self.errors)
+                '\n\t'.join(self.errors)
             )
 
 
