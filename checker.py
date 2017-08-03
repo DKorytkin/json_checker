@@ -22,7 +22,7 @@ def _is_dict(data):
 
 
 def _is_class(data):
-    return issubclass(data, (Or, And))
+    return issubclass(data.__class__, (Or, And))
 
 
 def _is_type(data):
@@ -133,17 +133,30 @@ class And(BaseChecker):
         pass
 
 
-class Or(BaseChecker):
+class Or(object):
+
+    def __init__(self, *data):
+        self.expected_data = data
+        self.errors = []
+
+    def __repr__(self):
+        return REPR_TEMPLATE.format(
+            class_name=self.__class__.__name__,
+            current=self.expected_data
+        )
+
+    def _format_errors(self):
+        if len(self.errors) == len(self.expected_data):
+            return '\n\t Not valid data Or{}'.format(self.expected_data)
 
     def validate(self, current_data):
         # TODO must be tested
-        errors = []
         for checker in [Validator(d) for d in self.expected_data]:
             res = checker.validate(current_data)
             if res:
-                errors.append(res)
-        if len(errors) == len(self.expected_data):
-            return errors
+                self.errors.append(res)
+
+        return self._format_errors()
 
 
 class Validator(object):
@@ -183,8 +196,8 @@ class Validator(object):
             self._append_errors(dict_checker.validate(data))
         elif _is_class(self.expected_data):
             # TODO added Or, And, Optional params
-            checker = And(self.expected_data)
-            self._append_errors(checker.validate(data))
+            result = self.expected_data.validate(data)
+            self._append_errors(result)
         elif _is_type(self.expected_data):
             type_checker = TypeChecker(self.expected_data)
             self._append_errors(type_checker.validate(data))
@@ -203,9 +216,6 @@ class Checker(object):
 
     def __repr__(self):
         return str(self.expected_data)
-
-    def __getattr__(self, item):
-        return getattr(self.expected_data, item)
 
     def validate(self, data):
         checker = Validator(self.expected_data)
