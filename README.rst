@@ -8,7 +8,7 @@ such as those obtained from JSON (or something else) to Python data-types.
 Installation
 -------------------------------------------------------------------------------
 
-git clone https://github.com/DKorytkin/JsonChecker.git
+git clone https://github.com/DKorytkin/Checker.git
 
 
 Example
