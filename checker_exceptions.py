@@ -6,7 +6,6 @@ class CheckerError(Exception):
         self.errors = errors
 
     def __str__(self):
-        print(self.errors)
         return '\n{}'.format('\n'.join(
             self.errors if isinstance(self.errors, list) else [self.errors]
         ))

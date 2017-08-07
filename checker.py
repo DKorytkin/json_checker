@@ -70,7 +70,6 @@ class ListChecker(BaseChecker):
             assert _is_iter(current_data), NOT_SUPPORTED_ITER_OBJECT_MESSAGE
             for data in current_data:
                 result = checker.validate(data)
-                print('result', result)
                 if result and self.soft:
                     self.errors.extend(result)
                 elif result and not self.soft:
@@ -126,7 +125,6 @@ class DictChecker(BaseChecker):
                 current_value = data.get(key.expected_data[0])
 
             result = checker.validate(current_value)
-            print('DictChecker', result)
             if result and self.soft:
                 self.errors.append(
                     DICT_ERROR_TEMPLATE.format(key, result)
