@@ -1,5 +1,6 @@
 
 import json
+import inspect
 from collections import namedtuple
 
 
@@ -31,6 +32,10 @@ def _is_type(data):
 
 def _is_func(data):
     return callable(data)
+
+
+def _is_optional(data):
+    return issubclass(data.__class__, OptionalKey)
 
 
 class CheckerException(Exception):
@@ -111,15 +116,19 @@ class DictChecker(BaseChecker):
         assert current_dict, 'Wrong current dict is None'
         assert self.expected_data, 'Wrong expected dict is None'
         assert isinstance(current_dict, dict), 'Current data is not dict'
-        check_keys = set(self.expected_data.keys()) ^ set(current_dict.keys())
-        assert not check_keys, 'Difference keys {}'.format(check_keys)
 
     def validate(self, data):
         self._check_dicts(data)
         for key, value in self.expected_data.items():
             checker = Validator(value)
             # TODO add validate key instance
-            result = checker.validate(data.get(key))
+            current_value = data.get(key)
+            if _is_optional(key) and key.expected_data[0] not in data.keys():
+                continue
+            elif _is_optional(key):
+                current_value = data.get(key.expected_data[0])
+
+            result = checker.validate(current_value)
             if result:
                 self.errors.append(
                     DICT_ERROR_TEMPLATE.format(key, '\n'.join(result))
@@ -161,6 +170,15 @@ class And(Or):
             return '\n\t Not valid data And{}'.format(self.expected_data)
 
 
+class OptionalKey(Or):
+    # TODO must be tested
+    def __repr__(self):
+        return REPR_TEMPLATE.format(
+            class_name=self.__class__.__name__,
+            current=self.expected_data[0]
+        )
+
+
 class Validator(object):
 
     def __init__(self, expected_data):
@@ -196,14 +214,12 @@ class Validator(object):
             dict_checker = DictChecker(self.expected_data)
             self._append_errors(dict_checker.validate(data))
         elif _is_class(self.expected_data):
-            # TODO added Or, And, Optional params
             result = self.expected_data.validate(data)
             self._append_errors(result)
         elif _is_type(self.expected_data):
             type_checker = TypeChecker(self.expected_data)
             self._append_errors(type_checker.validate(data))
         elif _is_func(self.expected_data):
-            import inspect
             func_str = inspect.getsource(self.expected_data)
             if not self.expected_data(data):
                 self._append_errors('Function error {}'.format(func_str))
@@ -219,7 +235,10 @@ class Checker(object):
         self.expected_data = expected_data
 
     def __repr__(self):
-        return str(self.expected_data)
+        res = str(self.expected_data)
+        if callable(self.expected_data):
+            res = inspect.getsource(self.expected_data)
+        return res
 
     def validate(self, data):
         checker = Validator(self.expected_data)
