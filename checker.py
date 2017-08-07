@@ -127,12 +127,6 @@ class DictChecker(BaseChecker):
         return self._format_errors()
 
 
-class And(BaseChecker):
-
-    def validate(self, current_data):
-        pass
-
-
 class Or(object):
 
     def __init__(self, *data):
@@ -159,6 +153,14 @@ class Or(object):
         return self._format_errors()
 
 
+class And(Or):
+    # TODO must be tested
+    # TODO add view failed param
+    def _format_errors(self):
+        if self.errors:
+            return '\n\t Not valid data And{}'.format(self.expected_data)
+
+
 class Validator(object):
 
     def __init__(self, expected_data):
@@ -176,7 +178,6 @@ class Validator(object):
             self.errors.append(result)
 
     def validate(self, data):
-        # TODO added validation current data None
         if _is_iter(self.expected_data):
             assert data and _is_iter(data), 'Wrong current data'
             list_checker = ListChecker(self.expected_data)
@@ -202,10 +203,13 @@ class Validator(object):
             type_checker = TypeChecker(self.expected_data)
             self._append_errors(type_checker.validate(data))
         elif _is_func(self.expected_data):
-            # TODO added validate function
-            print('CALL')
-            pass
-
+            import inspect
+            func_str = inspect.getsource(self.expected_data)
+            if not self.expected_data(data):
+                self._append_errors('Function error {}'.format(func_str))
+        elif self.expected_data is None:
+            if self.expected_data != data:
+                self._append_errors('Data is not None')
         return self.errors
 
 
