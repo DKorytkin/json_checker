@@ -71,7 +71,7 @@ class ListChecker(BaseChecker):
             for data in current_data:
                 result = checker.validate(data)
                 if result and self.soft:
-                    self.errors.extend(result)
+                    self.errors.append(result)
                 elif result and not self.soft:
                     raise ListCheckerError(result)
         return self._format_errors()
