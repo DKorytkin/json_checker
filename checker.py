@@ -2,7 +2,13 @@
 import json
 import inspect
 
-from checker_exceptions import CheckerError, ListCheckerError, DictCheckerError
+from checker_exceptions import (
+    CheckerError,
+    TypeCheckerError,
+    ListCheckerError,
+    DictCheckerError,
+)
+
 
 SUPPORT_ITER_OBJECTS = (list, tuple, set, frozenset)
 
@@ -91,7 +97,9 @@ class TypeChecker(BaseChecker):
                 self.expected_data,
                 json.dumps(current_data)
             )
-        return self._format_errors()
+            if self.soft:
+                return self._format_errors()
+            raise TypeCheckerError(ERROR_TEMPLATE.format(*self.errors))
 
 
 class DictChecker(BaseChecker):
@@ -128,6 +136,8 @@ class Or(object):
     """
     from validation some params
     even if one param must be returned True
+    example:
+    Or(int, None)
     """
 
     def __init__(self, *data):
@@ -233,7 +243,9 @@ class Validator(object):
                 self._append_errors('Function error {}'.format(func))
         elif self.expected_data is None:
             if self.expected_data != data:
-                self._append_errors('Data is not None')
+                self._append_errors(
+                    'Is not None, current data {}'.format(data)
+                )
         return self.errors
 
 

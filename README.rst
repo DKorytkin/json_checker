@@ -67,14 +67,15 @@ Lists, similar containers
 If ``Checker(...)`` encounters an instance of ``list``, ``tuple``, ``set`` or
 ``frozenset``, it will validate contents of corresponding data container
 against schemas listed inside that container:
-
+if param ``soft`` is True validate all data,
+and if have not valid data raise exception after validation
 
 .. code:: python
 
     >>> Checker([int]).validate([1, 1, 0, 1])
     [1, 1, 0, 1]
 
-    >>> Checker([str]).validate((1, 2, 3))
+    >>> Checker([str], soft=True).validate((1, 2, 3))
     Traceback (most recent call last):
     ...
     checker_exceptions.ListCheckerError:
@@ -82,6 +83,11 @@ against schemas listed inside that container:
     TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 2
     TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 3
 
+    >>> Checker([str]).validate((1, 2, 3))
+    Traceback (most recent call last):
+    ...
+    checker_exceptions.ListCheckerError:
+    TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 1
 
 Dictionaries
 ~~~~~~~~~~~~
