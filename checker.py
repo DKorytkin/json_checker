@@ -223,6 +223,7 @@ class Validator(object):
             self._append_errors(result)
         elif _is_type(self.expected_data):
             type_checker = TypeChecker(self.expected_data, self.soft)
+            # TODO FIX TypeError: object of type 'int' has no len()
             result = type_checker.validate(data)
             if result:
                 return result
