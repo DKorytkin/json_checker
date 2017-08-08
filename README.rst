@@ -25,8 +25,8 @@ validating a list of entries with personal information:
     >>> expected_data = {'first_key': int, 'second_key': str}
 
 
-    >>> checker = Checker(current_data)
-    >>> result = checker.validate(expected_data)
+    >>> checker = Checker(expected_data)
+    >>> result = checker.validate(current_data)
 
 
     >>> assert result == current_data
@@ -51,10 +51,10 @@ otherwise it will raise ``CheckerException``.
 
     >>> from checker import Checker
 
-    >>> Checker(123).validate(int)
+    >>> Checker(int).validate(123)
     123
 
-    >>> Checker('123').validate(int)
+    >>> Checker(int).validate('123')
     Traceback (most recent call last):
     ...
     CheckerException:
@@ -71,17 +71,16 @@ against schemas listed inside that container:
 
 .. code:: python
 
-    >>> Checker([1, 1, 0, 1]).validate([int])
+    >>> Checker([int]).validate([1, 1, 0, 1])
     [1, 1, 0, 1]
 
-    >>> Checker((1, 2, 3)).validate([str])
+    >>> Checker([str]).validate((1, 2, 3))
     Traceback (most recent call last):
     ...
-    checker.CheckerException:
-    ListCheckerErrors:
-        TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 1
-        TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 2
-        TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 3
+    checker_exceptions.ListCheckerError:
+    TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 1
+    TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 2
+    TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 3
 
 
 Dictionaries
@@ -93,14 +92,69 @@ key-value pairs:
 .. code:: python
 
     >>> current_dict = {'first_key': 1, 'second_key': '2'}
-    >>> checker = Checker(current_dict)
-
-
-    >>> checker.validate({'first_key': int, 'second_key': int})
+    >>> checker = Checker({'first_key': int, 'second_key': int})
+    >>> checker.validate(current_dict)
 
     Traceback (most recent call last):
     ...
-    checker.CheckerException:
-    DictCheckerErrors:
+    checker_exceptions.DictCheckerError:
     From key="second_key"
-    TypeCheckerError: current type <class 'str'>, expected type <class 'int'>, current value 2
+        TypeCheckerError: current type <class 'str'>, expected type <class 'int'>, current value 2
+
+
+Operators Or, And, OptionalKey
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you needed validate data from some conditions, use And operator
+for example current data must be int instance and greater than 0 and less 99
+try it:
+
+.. code:: python
+
+    >>> from checker import Checker, And
+
+    >>> c = Checker(And(int, lambda x: 0 < x < 99))
+    >>> c.validate(12)
+    12
+
+    >>> c.validate(100)
+    Traceback (most recent call last):
+    ...
+    checker_exceptions.CheckerError:
+        Not valid data And(<class 'int'>, <function <lambda> at 0x7f54ceb26ea0>)
+
+
+If you need validation not required data value, use Or operator
+for example current data must be int or None
+try it:
+
+.. code:: python
+
+    >>> from checker import Checker, Or
+
+    >>> c = Checker(Or(int, None))
+    >>> c.validate(122)
+    122
+
+    >>> c.validate('666')
+    Traceback (most recent call last):
+    ...
+    checker_exceptions.CheckerError:
+        Not valid data Or(<class 'int'>, None)
+
+If you need validate no required dict key, use OptionalKey
+
+.. code:: python
+
+    >>> from checker import Checker, OptionalKey
+
+    >>> expected_dict = {'key1': str, OptionalKey('key2'): int}
+    >>> Checker(expected_dict).validate({'key1': 'value'})
+    {'key1': 'value'}
+
+    >>> Checker(expected_dict).validate({'key1': 'value', 'key2': 'value2'})
+    Traceback (most recent call last):
+    ...
+    checker_exceptions.DictCheckerError:
+    From key="OptionalKey(key2)"
+        TypeCheckerError: current type <class 'str'>, expected type <class 'int'>, current value "value2"
