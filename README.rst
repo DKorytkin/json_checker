@@ -4,6 +4,8 @@ Checker
 **Checker** is a library for validating Python data structures,
 such as those obtained from JSON (or something else) to Python data-types.
 
+.. image:: https://travis-ci.org/DKorytkin/Checker.svg?branch=master 
+    :target: https://travis-ci.org/DKorytkin/Checker
 
 Installation
 -------------------------------------------------------------------------------
