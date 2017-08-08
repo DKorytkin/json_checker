@@ -150,9 +150,14 @@ class Or(object):
             current=self.expected_data
         )
 
+    def _format_data(self):
+        return tuple(
+            d.__name__ if callable(d) else d for d in self.expected_data
+        )
+
     def _format_errors(self):
         if len(self.errors) == len(self.expected_data):
-            return '\n\t Not valid data Or{}'.format(self.expected_data)
+            return '\n\t Not valid data Or{}'.format(self._format_data())
 
     def validate(self, current_data):
         # TODO must be tested
@@ -175,7 +180,7 @@ class And(Or):
     # TODO add view failed param
     def _format_errors(self):
         if self.errors:
-            return '\n\t Not valid data And{}'.format(self.expected_data)
+            return '\n\t Not valid data And{}'.format(self._format_data())
 
 
 class OptionalKey(Or):
@@ -234,6 +239,7 @@ class Validator(object):
         elif _is_type(self.expected_data):
             type_checker = TypeChecker(self.expected_data, self.soft)
             # TODO FIX TypeError: object of type 'int' has no len()
+            # TODO FIX TypeError: unorderable types: str() > int()
             result = type_checker.validate(data)
             if result:
                 return result
