@@ -4,7 +4,6 @@ import inspect
 
 from checker_exceptions import (
     CheckerError,
-    TypeCheckerError,
     ListCheckerError,
     DictCheckerError,
 )
@@ -59,9 +58,9 @@ class BaseChecker(object):
 
     def _format_errors(self):
         if self.errors:
-            return '{}Errors:\n\t{}'.format(
+            return '{}Errors:\n{}'.format(
                 self.__class__.__name__,
-                '\n\t'.join(self.errors)
+                '\n'.join(self.errors)
             )
 
 
@@ -87,8 +86,7 @@ class TypeChecker(BaseChecker):
 
     def _format_errors(self):
         if self.errors:
-            error = ERROR_TEMPLATE.format(*self.errors)
-            return 'TypeCheckerError: {}'.format(error)
+            return ERROR_TEMPLATE.format(*self.errors)
 
     def validate(self, current_data):
         if not isinstance(current_data, self.expected_data):
@@ -97,9 +95,7 @@ class TypeChecker(BaseChecker):
                 self.expected_data,
                 json.dumps(current_data)
             )
-            if self.soft:
-                return self._format_errors()
-            raise TypeCheckerError(ERROR_TEMPLATE.format(*self.errors))
+        return self._format_errors()
 
 
 class DictChecker(BaseChecker):
