@@ -11,6 +11,10 @@ class CheckerError(Exception):
         ))
 
 
+class TypeCheckerError(CheckerError):
+    pass
+
+
 class ListCheckerError(CheckerError):
     pass
 

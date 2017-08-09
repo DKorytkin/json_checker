@@ -4,6 +4,7 @@ import inspect
 
 from checker_exceptions import (
     CheckerError,
+    TypeCheckerError,
     ListCheckerError,
     DictCheckerError,
 )
@@ -77,7 +78,10 @@ class ListChecker(BaseChecker):
             # TODO fixed [1,2,3, [4,5,6, [7,8] ,10, 11]] may be try, final
             assert _is_iter(current_data), NOT_SUPPORTED_ITER_OBJECT_MESSAGE
             for data in current_data:
-                result = checker.validate(data)
+                try:
+                    result = checker.validate(data)
+                except TypeCheckerError as e:
+                    result = e.__str__().replace('\n', '')
                 self._append_errors_or_raise(result)
         return self._format_errors()
 
@@ -95,6 +99,9 @@ class TypeChecker(BaseChecker):
                 self.expected_data,
                 json.dumps(current_data)
             )
+            if self.soft:
+                return self._format_errors()
+            raise TypeCheckerError(ERROR_TEMPLATE.format(*self.errors))
         return self._format_errors()
 
 
@@ -122,8 +129,10 @@ class DictChecker(BaseChecker):
                 continue
             elif _is_optional(key):
                 current_value = data.get(key.expected_data[0])
-
-            result = checker.validate(current_value)
+            try:
+                result = checker.validate(current_value)
+            except TypeCheckerError as e:
+                result = e.__str__().replace('\n', '')
             self._append_errors_or_raise(key, result)
         return self._format_errors()
 

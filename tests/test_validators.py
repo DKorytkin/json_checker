@@ -2,24 +2,30 @@
 import pytest
 
 from checker import ListChecker, TypeChecker, DictChecker
-from checker_exceptions import ListCheckerError, DictCheckerError
+from checker_exceptions import (
+    TypeCheckerError,
+    ListCheckerError,
+    DictCheckerError
+)
 
 
-TYPE_DATA = [
+TYPE_DATA_POSITIVE = [
     [int, True, 123, None],
     [int, False, 123, None],
     [int, False, True, None],
     # [len, False, [1, 2], None], TODO unskip after fix
     [bool, False, True, None],
     [str, False, "1", None],
-    [int, False, '123', "current type <class 'str'>, expected type <class 'int'>, current value \"123\""],
     [int, True, '123', "current type <class 'str'>, expected type <class 'int'>, current value \"123\""],
-    [int, False, [], "current type <class 'list'>, expected type <class 'int'>, current value []"],
-    [bool, False, 1, "current type <class 'int'>, expected type <class 'bool'>, current value 1"],
     [bool, True, 1, "current type <class 'int'>, expected type <class 'bool'>, current value 1"],
-    [str, False, [1], "current type <class 'list'>, expected type <class 'str'>, current value [1]"],
     [str, True, [1], "current type <class 'list'>, expected type <class 'str'>, current value [1]"],
-    [str, False, ["1"], "current type <class 'list'>, expected type <class 'str'>, current value [\"1\"]"],
+]
+TYPE_DATA_NEGATIVE = [
+    [str, ["1"]],
+    [str, [1]],
+    [bool, 1],
+    [int, '123'],
+    [int, []],
 ]
 LIST_DATA_POSITIVE = [
     [[int], False, [1, 2, 3], None],
@@ -62,11 +68,17 @@ DICT_DATA_ASSERT = [
 ]
 
 
-@pytest.mark.parametrize('data', TYPE_DATA)
-def test_type_checker(data):
+@pytest.mark.parametrize('data', TYPE_DATA_POSITIVE)
+def test_type_checker_positive(data):
     type_data, soft, current_data, expected_result = data
     type_checker = TypeChecker(type_data, soft=soft)
     assert type_checker.validate(current_data) == expected_result
+
+
+@pytest.mark.parametrize(('type_data', 'current_data'), TYPE_DATA_NEGATIVE)
+def test_type_checker_negative(type_data, current_data):
+    with pytest.raises(TypeCheckerError):
+        TypeChecker(type_data, soft=False).validate(current_data)
 
 
 @pytest.mark.parametrize('data', LIST_DATA_POSITIVE)
