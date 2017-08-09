@@ -56,6 +56,10 @@ DICT_DATA_NEGATIVE = [
     [{'test': str}, {'test': [1, 2, 3, ]}],
     [{'test': bool}, {'test': 666}],
 ]
+DICT_DATA_ASSERT = [
+    [{'test': bool}, {}],
+    [{'test': {'test': bool}}, {'test': {}}],
+]
 
 
 @pytest.mark.parametrize('data', TYPE_DATA)
@@ -88,4 +92,10 @@ def test_dict_checker_positive(data):
 @pytest.mark.parametrize(('dict_data', 'current_data'), DICT_DATA_NEGATIVE)
 def test_dict_checker_negative(dict_data, current_data):
     with pytest.raises(DictCheckerError):
+        DictChecker(dict_data, soft=False).validate(current_data)
+
+
+@pytest.mark.parametrize(('dict_data', 'current_data'), DICT_DATA_ASSERT)
+def test_dict_checker_assert(dict_data, current_data):
+    with pytest.raises(AssertionError):
         DictChecker(dict_data, soft=False).validate(current_data)
