@@ -11,13 +11,9 @@ class CheckerError(Exception):
         ))
 
 
-class TypeCheckerError(CheckerError):
+class ListCheckerError(CheckerError):
     pass
 
 
-class ListCheckerError(TypeCheckerError):
-    pass
-
-
-class DictCheckerError(TypeCheckerError):
+class DictCheckerError(CheckerError):
     pass
