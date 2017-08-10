@@ -1,29 +1,15 @@
+sudo: enabled
+dist: trusty
 
 language: python
+python:
+ - "3.5"
 
-addons:
-  apt:
-    sources:
-      - deadsnakes
-    packages:
-      - python3.5
+install:
+  - pip install --user codecov
 
-cache:
-  pip: true
-  directories:
-    - .tox
+script: pytest
 
-install: pip install codecov tox
-
-env:
-  - TOX_ENV=py27
-  - TOX_ENV=py35
-  - TOX_ENV=pypy
-  - TOX_ENV=coverage
-  - TOX_ENV=pep8
-
-script:
-  - tox -e $TOX_ENV
 
 after_success:
   - codecov
