@@ -11,4 +11,4 @@ install:
   - pip install codecov
 
 after_success:
-  - codecov --token=$TOKEN
+  - codecov --token=$CODECOV_TOKEN
