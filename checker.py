@@ -43,6 +43,18 @@ def _is_optional(data):
     return issubclass(data.__class__, OptionalKey)
 
 
+def _is_equals_types(current, expected):
+    return bool(type(expected) == type(current))
+
+
+def _format_data(data):
+    if callable(data):
+        return data.__name__
+    if data is None:
+        return data
+    return json.dumps(data)
+
+
 class BaseChecker(object):
 
     def __init__(self, data, soft):
@@ -94,13 +106,12 @@ class TypeChecker(BaseChecker):
     def validate(self, current_data):
         if not isinstance(current_data, self.expected_data):
             self.errors = (
-                json.dumps(current_data),
-                self.expected_data
+                _format_data(current_data),
+                _format_data(self.expected_data)
             )
             if self.soft:
                 return self._format_errors()
-            raise TypeCheckerError(ERROR_TEMPLATE.format(*self.errors))
-        return self._format_errors()
+            raise TypeCheckerError(self._format_errors())
 
 
 class DictChecker(BaseChecker):
@@ -155,9 +166,7 @@ class Or(object):
         )
 
     def _format_data(self):
-        return tuple(
-            d.__name__ if callable(d) else d for d in self.expected_data
-        )
+        return tuple(_format_data(d) for d in self.expected_data)
 
     def _format_errors(self, errors):
         if len(errors) == len(self.expected_data):
@@ -244,12 +253,18 @@ class Validator(object):
         elif _is_func(self.expected_data):
             func = self.expected_data
             if not func(data):
-                return 'Function error {}'.format(func.__name__)
+                return 'Function error {}'.format(_format_data(func))
         elif self.expected_data is None:
             if self.expected_data != data:
                 return ERROR_TEMPLATE.format(
-                    json.dumps(data),
-                    self.expected_data
+                    _format_data(data),
+                    _format_data(self.expected_data)
+                )
+        elif _is_equals_types(data, self.expected_data):
+            if self.expected_data != data:
+                return ERROR_TEMPLATE.format(
+                    _format_data(data),
+                    _format_data(self.expected_data)
                 )
         return self.errors
 
