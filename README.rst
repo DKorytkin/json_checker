@@ -62,7 +62,7 @@ otherwise it will raise ``CheckerException``.
     Traceback (most recent call last):
     ...
     CheckerException:
-    TypeCheckerError: current type <class 'str'>, expected type <class 'int'>, current value 123
+    TypeCheckerError: current value 123 is not <class 'int'>
 
 
 Lists, similar containers
@@ -83,15 +83,15 @@ and if have not valid data raise exception after validation
     Traceback (most recent call last):
     ...
     checker_exceptions.ListCheckerError:
-    TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 1
-    TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 2
-    TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 3
+    TypeCheckerError: current value 1 is not <class 'str'>
+    TypeCheckerError: current value 2 is not <class 'str'>
+    TypeCheckerError: current value 3 is not <class 'str'>
 
     >>> Checker([str]).validate((1, 2, 3))
     Traceback (most recent call last):
     ...
     checker_exceptions.ListCheckerError:
-    TypeCheckerError: current type <class 'int'>, expected type <class 'str'>, current value 1
+    TypeCheckerError: current value 1 is not <class 'str'>
 
 Dictionaries
 ~~~~~~~~~~~~
@@ -109,7 +109,7 @@ key-value pairs:
     ...
     checker_exceptions.DictCheckerError:
     From key="second_key"
-        TypeCheckerError: current type <class 'str'>, expected type <class 'int'>, current value 2
+        current value 2 is not <class 'int'>
 
 
 Operators Or, And, OptionalKey
@@ -167,4 +167,4 @@ If you need validate no required dict key, use OptionalKey
     ...
     checker_exceptions.DictCheckerError:
     From key="OptionalKey(key2)"
-        TypeCheckerError: current type <class 'str'>, expected type <class 'int'>, current value "value2"
+        current value "value2" is not <class 'int'>
