@@ -9,7 +9,7 @@ Checker
 such as those obtained from JSON (or something else) to Python data-types.
 Checker has a parameter (soft=True) that allows you validate all json and
 raise all errors after validation done, it`s very easy API testing
-Main purpose testing API
+**Checker** is main purpose testing API
 
 
 Installation
@@ -65,7 +65,7 @@ otherwise it will raise ``CheckerException``.
     Traceback (most recent call last):
     ...
     checker_exceptions.TypeCheckerError:
-    current value "123" is not <class 'int'>
+    current value "123" is not int
 
 
 Lists, similar containers
@@ -87,15 +87,15 @@ and if have not valid data raise exception after validation
     ...
     checker_exceptions.CheckerError:
     ListCheckerErrors:
-    current type <class 'int'>, expected type <class 'str'>, current value 1
-    current type <class 'int'>, expected type <class 'str'>, current value 2
-    current type <class 'int'>, expected type <class 'str'>, current value 3
+    current value 1 is not str
+    current value 2 is not str
+    current value 3 is not str
 
     >>> Checker([str]).validate((1, 2, 3))
     Traceback (most recent call last):
     ...
     checker_exceptions.ListCheckerError:
-    current value 1 is not <class 'str'>
+    current value 1 is not str
 
 Dictionaries
 ~~~~~~~~~~~~
@@ -113,7 +113,7 @@ key-value pairs:
     ...
     checker_exceptions.DictCheckerError:
     From key="second_key"
-        current value 2 is not <class 'int'>
+        current value 2 is not int
 
 
 Operators Or, And, OptionalKey
@@ -154,8 +154,8 @@ try it:
     Traceback (most recent call last):
     ...
     checker_exceptions.CheckerError:
-    Not valid data Or(<class 'int'>, None)
-        current value "122" is not <class 'int'>
+    Not valid data Or('int', None)
+        current value "122" is not int
         current value "122" is not None
 
 
@@ -174,4 +174,4 @@ If you need validate no required dict key, use OptionalKey
     ...
     checker_exceptions.DictCheckerError:
     From key="OptionalKey(key2)"
-        current value "value2" is not <class 'int'>
+        current value "value2" is not int
