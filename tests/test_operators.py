@@ -18,8 +18,7 @@ AND_DATA = [
 ]
 OPTIONAL_DATA = [
     [{OptionalKey('key'): 'value'}, {'key': 'value'}, {'key': 'value'}],
-    [{OptionalKey('key'): 'value'}, {'key2': 'value2'}, {'key2': 'value2'}],
-    [{OptionalKey('key'): 'value'}, {}, 'Wrong current dict is None']
+    [{OptionalKey('key'): 'value'}, {'key2': 'value2'}, {'key2': 'value2'}]
 ]
 
 
@@ -38,8 +37,9 @@ def test_operator_and(data):
 @pytest.mark.parametrize('data', OPTIONAL_DATA)
 def test_operator_optional_key(data):
     optional_data, current_data, expected_result = data
-    try:
-        result = Checker(optional_data).validate(current_data)
-    except AssertionError as e:
-        result = e.__str__()
-    assert result == expected_result
+    assert Checker(optional_data).validate(current_data) == expected_result
+
+
+def test_operator_optional_key_assert():
+    with pytest.raises(AssertionError):
+        Checker({OptionalKey('key'): 'value'}).validate({})

@@ -1,6 +1,5 @@
 
 import json
-import inspect
 
 from checker_exceptions import (
     CheckerError,
@@ -224,17 +223,8 @@ class Validator(object):
         if _is_iter(self.expected_data):
             assert data and _is_iter(data), 'Wrong current data'
             list_checker = ListChecker(self.expected_data, self.soft)
-            try:
-                result = list_checker.validate(data)
-                self._append_errors(result)
-            except TypeError as e:
-                self.errors.append(
-                    'TypeError: ' + ERROR_TEMPLATE.format(
-                        type(data),
-                        type(list_checker.expected_data),
-                        e.__str__()
-                    )
-                )
+            result = list_checker.validate(data)
+            self._append_errors(result)
         elif _is_dict(self.expected_data):
             dict_checker = DictChecker(self.expected_data, self.soft)
             self._append_errors(dict_checker.validate(data))
@@ -251,7 +241,7 @@ class Validator(object):
         elif _is_func(self.expected_data):
             func = self.expected_data
             if not func(data):
-                self._append_errors('Function error {}'.format(func))
+                self._append_errors('Function error {}'.format(func.__name__))
         elif self.expected_data is None:
             if self.expected_data != data:
                 self._append_errors(
@@ -269,7 +259,7 @@ class Checker(object):
     def __repr__(self):
         res = str(self.expected_data)
         if callable(self.expected_data):
-            res = inspect.getsource(self.expected_data)
+            res = self.expected_data.__name__
         return res
 
     def validate(self, data):
