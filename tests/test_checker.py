@@ -70,6 +70,16 @@ CHECKER_DATA_NEGATIVE = [
     [{'key1': And(int, bool)}, {'key1': None}],
     [{'key1': And(str, lambda x: x in ('t', 'e', 's', 't'))}, {'key1': '1'}],
 ]
+CHECKER_DATA_ASSERT = [
+    [[int], []],
+    [[int], 122],
+    [{'test': bool}, {}],
+    [{'test': bool}, []],
+    [{'test': bool}, 'test'],
+    [{}, {'test': 'test'}],
+    [{'test': {'test': bool}}, {'test': {}}],
+    [{'test': {'test': bool}}, {'test': 'test'}],
+]
 
 
 def _get_expected_exception(ex_object, soft=False):
@@ -91,6 +101,13 @@ def test_checker_positive(expected, current, soft):
 
 @pytest.mark.parametrize('soft', [True, False])
 @pytest.mark.parametrize(('expected', 'current'), CHECKER_DATA_NEGATIVE)
-def test_checker_negative_soft(expected, current, soft):
+def test_checker_negative(expected, current, soft):
     with pytest.raises(_get_expected_exception(expected, soft)):
+        Checker(expected, soft).validate(current)
+
+
+@pytest.mark.parametrize('soft', [True, False])
+@pytest.mark.parametrize(('expected', 'current'), CHECKER_DATA_ASSERT)
+def test_checker_assert(expected, current, soft):
+    with pytest.raises(AssertionError):
         Checker(expected, soft).validate(current)
