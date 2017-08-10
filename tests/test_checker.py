@@ -37,7 +37,8 @@ CHECKER_DATA_POSITIVE = [
     [{'key1': Or(int, None)}, {'key1': None}],
 ]
 CHECKER_DATA_NEGATIVE = [
-    [],
+    [int, True, '5', CheckerError],
+    [int, False, '5', TypeCheckerError],
 ]
 
 
@@ -47,7 +48,6 @@ def test_checker_positive(expected, current, soft):
     assert Checker(expected, soft).validate(current) == current
 
 
-@pytest.mark.skip()
 @pytest.mark.parametrize('data', CHECKER_DATA_NEGATIVE)
 def test_checker_negative(data):
     expected_data, soft, current_data, exception = data
