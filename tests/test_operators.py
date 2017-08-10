@@ -7,13 +7,13 @@ from checker import Checker, And, Or, OptionalKey
 OR_DATA = [
     [(int, None), 1, None],
     [(int, None), None, None],
-    [(int, None), '1', "\n\t Not valid data Or('int', None)"]
+    [(int, None), '1', 'Not valid data Or(\'int\', None)\n\tcurrent value "1" is not <class \'int\'>\n\tcurrent value "1" is not None']
 ]
 AND_DATA = [
     [(int, lambda x: x > 0), 1, None],
     [(int, bool), True, None],
-    [(int, bool), 0, "\n\t Not valid data And('int', 'bool')"],
-    [(int, lambda x: x > 0), 0, "\n\t Not valid data And('int', '<lambda>')"],
+    [(int, bool), 0, "Not valid data And('int', 'bool')"],
+    [(int, lambda x: x > 0), 0, "Not valid data And('int', '<lambda>')"],
     # [(int, lambda x: x > 0), '1', None] # TODO unskip after fix
 ]
 OPTIONAL_DATA = [
