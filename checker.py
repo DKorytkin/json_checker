@@ -14,7 +14,7 @@ SUPPORT_ITER_OBJECTS = (list, tuple, set, frozenset)
 NOT_SUPPORTED_ITER_OBJECT_MESSAGE = 'Current data is not {}'.format(
     SUPPORT_ITER_OBJECTS
 )
-ERROR_TEMPLATE = 'current type {}, expected type {}, current value {}'
+ERROR_TEMPLATE = 'current value {} is not {}'
 DICT_ERROR_TEMPLATE = 'From key="{}"\n\t{}'
 REPR_TEMPLATE = u'{class_name}({current})'
 
@@ -94,9 +94,8 @@ class TypeChecker(BaseChecker):
     def validate(self, current_data):
         if not isinstance(current_data, self.expected_data):
             self.errors = (
-                type(current_data),
-                self.expected_data,
-                json.dumps(current_data)
+                json.dumps(current_data),
+                self.expected_data
             )
             if self.soft:
                 return self._format_errors()
@@ -112,6 +111,8 @@ class DictChecker(BaseChecker):
         assert isinstance(current_dict, dict), 'Current data is not dict'
 
     def _append_errors_or_raise(self, key, result):
+        if result and type(result) is list:
+            result = '\n\t'.join(result)
         if result and self.soft:
             self.errors.append(DICT_ERROR_TEMPLATE.format(key, result))
         elif result and not self.soft:
@@ -146,7 +147,6 @@ class Or(object):
 
     def __init__(self, *data):
         self.expected_data = data
-        self.errors = []
 
     def __repr__(self):
         return REPR_TEMPLATE.format(
@@ -159,18 +159,21 @@ class Or(object):
             d.__name__ if callable(d) else d for d in self.expected_data
         )
 
-    def _format_errors(self):
-        if len(self.errors) == len(self.expected_data):
-            return '\n\t Not valid data Or{}'.format(self._format_data())
+    def _format_errors(self, errors):
+        if len(errors) == len(self.expected_data):
+            return 'Not valid data Or{}\n\t{}'.format(
+                self._format_data(),
+                '\n\t'.join(errors)
+            )
 
     def validate(self, current_data):
         # TODO must be tested
+        errors = []
         for checker in [Validator(d, soft=True) for d in self.expected_data]:
             res = checker.validate(current_data)
             if res:
-                self.errors.append(res)
-
-        return self._format_errors()
+                errors.append(res)
+        return self._format_errors(errors)
 
 
 class And(Or):
@@ -182,9 +185,9 @@ class And(Or):
     """
     # TODO must be tested
     # TODO add view failed param
-    def _format_errors(self):
-        if self.errors:
-            return '\n\t Not valid data And{}'.format(self._format_data())
+    def _format_errors(self, errors):
+        if errors:
+            return 'Not valid data And{}'.format(self._format_data())
 
 
 class OptionalKey(Or):
@@ -241,11 +244,12 @@ class Validator(object):
         elif _is_func(self.expected_data):
             func = self.expected_data
             if not func(data):
-                self._append_errors('Function error {}'.format(func.__name__))
+                return 'Function error {}'.format(func.__name__)
         elif self.expected_data is None:
             if self.expected_data != data:
-                self._append_errors(
-                    'Is not None, current data {}'.format(data)
+                return ERROR_TEMPLATE.format(
+                    json.dumps(data),
+                    self.expected_data
                 )
         return self.errors
 
