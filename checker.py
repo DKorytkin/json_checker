@@ -1,9 +1,9 @@
 
 import json
-import inspect
 
 from checker_exceptions import (
     CheckerError,
+    TypeCheckerError,
     ListCheckerError,
     DictCheckerError,
 )
@@ -14,7 +14,7 @@ SUPPORT_ITER_OBJECTS = (list, tuple, set, frozenset)
 NOT_SUPPORTED_ITER_OBJECT_MESSAGE = 'Current data is not {}'.format(
     SUPPORT_ITER_OBJECTS
 )
-ERROR_TEMPLATE = 'current type {}, expected type {}, current value {}'
+ERROR_TEMPLATE = 'current value {} is not {}'
 DICT_ERROR_TEMPLATE = 'From key="{}"\n\t{}'
 REPR_TEMPLATE = u'{class_name}({current})'
 
@@ -77,7 +77,10 @@ class ListChecker(BaseChecker):
             # TODO fixed [1,2,3, [4,5,6, [7,8] ,10, 11]] may be try, final
             assert _is_iter(current_data), NOT_SUPPORTED_ITER_OBJECT_MESSAGE
             for data in current_data:
-                result = checker.validate(data)
+                try:
+                    result = checker.validate(data)
+                except TypeCheckerError as e:
+                    result = e.__str__().replace('\n', '')
                 self._append_errors_or_raise(result)
         return self._format_errors()
 
@@ -91,10 +94,12 @@ class TypeChecker(BaseChecker):
     def validate(self, current_data):
         if not isinstance(current_data, self.expected_data):
             self.errors = (
-                type(current_data),
-                self.expected_data,
-                json.dumps(current_data)
+                json.dumps(current_data),
+                self.expected_data
             )
+            if self.soft:
+                return self._format_errors()
+            raise TypeCheckerError(ERROR_TEMPLATE.format(*self.errors))
         return self._format_errors()
 
 
@@ -106,6 +111,8 @@ class DictChecker(BaseChecker):
         assert isinstance(current_dict, dict), 'Current data is not dict'
 
     def _append_errors_or_raise(self, key, result):
+        if result and type(result) is list:
+            result = '\n\t'.join(result)
         if result and self.soft:
             self.errors.append(DICT_ERROR_TEMPLATE.format(key, result))
         elif result and not self.soft:
@@ -122,8 +129,10 @@ class DictChecker(BaseChecker):
                 continue
             elif _is_optional(key):
                 current_value = data.get(key.expected_data[0])
-
-            result = checker.validate(current_value)
+            try:
+                result = checker.validate(current_value)
+            except TypeCheckerError as e:
+                result = e.__str__().replace('\n', '')
             self._append_errors_or_raise(key, result)
         return self._format_errors()
 
@@ -138,7 +147,6 @@ class Or(object):
 
     def __init__(self, *data):
         self.expected_data = data
-        self.errors = []
 
     def __repr__(self):
         return REPR_TEMPLATE.format(
@@ -151,18 +159,21 @@ class Or(object):
             d.__name__ if callable(d) else d for d in self.expected_data
         )
 
-    def _format_errors(self):
-        if len(self.errors) == len(self.expected_data):
-            return '\n\t Not valid data Or{}'.format(self._format_data())
+    def _format_errors(self, errors):
+        if len(errors) == len(self.expected_data):
+            return 'Not valid data Or{}\n\t{}'.format(
+                self._format_data(),
+                '\n\t'.join(errors)
+            )
 
     def validate(self, current_data):
         # TODO must be tested
+        errors = []
         for checker in [Validator(d, soft=True) for d in self.expected_data]:
             res = checker.validate(current_data)
             if res:
-                self.errors.append(res)
-
-        return self._format_errors()
+                errors.append(res)
+        return self._format_errors(errors)
 
 
 class And(Or):
@@ -174,9 +185,9 @@ class And(Or):
     """
     # TODO must be tested
     # TODO add view failed param
-    def _format_errors(self):
-        if self.errors:
-            return '\n\t Not valid data And{}'.format(self._format_data())
+    def _format_errors(self, errors):
+        if errors:
+            return 'Not valid data And{}'.format(self._format_data())
 
 
 class OptionalKey(Or):
@@ -215,17 +226,8 @@ class Validator(object):
         if _is_iter(self.expected_data):
             assert data and _is_iter(data), 'Wrong current data'
             list_checker = ListChecker(self.expected_data, self.soft)
-            try:
-                result = list_checker.validate(data)
-                self._append_errors(result)
-            except TypeError as e:
-                self.errors.append(
-                    'TypeError: ' + ERROR_TEMPLATE.format(
-                        type(data),
-                        type(list_checker.expected_data),
-                        e.__str__()
-                    )
-                )
+            result = list_checker.validate(data)
+            self._append_errors(result)
         elif _is_dict(self.expected_data):
             dict_checker = DictChecker(self.expected_data, self.soft)
             self._append_errors(dict_checker.validate(data))
@@ -242,11 +244,12 @@ class Validator(object):
         elif _is_func(self.expected_data):
             func = self.expected_data
             if not func(data):
-                self._append_errors('Function error {}'.format(func))
+                return 'Function error {}'.format(func.__name__)
         elif self.expected_data is None:
             if self.expected_data != data:
-                self._append_errors(
-                    'Is not None, current data {}'.format(data)
+                return ERROR_TEMPLATE.format(
+                    json.dumps(data),
+                    self.expected_data
                 )
         return self.errors
 
@@ -260,7 +263,7 @@ class Checker(object):
     def __repr__(self):
         res = str(self.expected_data)
         if callable(self.expected_data):
-            res = inspect.getsource(self.expected_data)
+            res = self.expected_data.__name__
         return res
 
     def validate(self, data):

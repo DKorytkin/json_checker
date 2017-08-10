@@ -7,19 +7,18 @@ from checker import Checker, And, Or, OptionalKey
 OR_DATA = [
     [(int, None), 1, None],
     [(int, None), None, None],
-    [(int, None), '1', "\n\t Not valid data Or('int', None)"]
+    [(int, None), '1', 'Not valid data Or(\'int\', None)\n\tcurrent value "1" is not <class \'int\'>\n\tcurrent value "1" is not None']
 ]
 AND_DATA = [
     [(int, lambda x: x > 0), 1, None],
     [(int, bool), True, None],
-    [(int, bool), 0, "\n\t Not valid data And('int', 'bool')"],
-    [(int, lambda x: x > 0), 0, "\n\t Not valid data And('int', '<lambda>')"],
+    [(int, bool), 0, "Not valid data And('int', 'bool')"],
+    [(int, lambda x: x > 0), 0, "Not valid data And('int', '<lambda>')"],
     # [(int, lambda x: x > 0), '1', None] # TODO unskip after fix
 ]
 OPTIONAL_DATA = [
     [{OptionalKey('key'): 'value'}, {'key': 'value'}, {'key': 'value'}],
-    [{OptionalKey('key'): 'value'}, {'key2': 'value2'}, {'key2': 'value2'}],
-    [{OptionalKey('key'): 'value'}, {}, 'Wrong current dict is None']
+    [{OptionalKey('key'): 'value'}, {'key2': 'value2'}, {'key2': 'value2'}]
 ]
 
 
@@ -38,8 +37,9 @@ def test_operator_and(data):
 @pytest.mark.parametrize('data', OPTIONAL_DATA)
 def test_operator_optional_key(data):
     optional_data, current_data, expected_result = data
-    try:
-        result = Checker(optional_data).validate(current_data)
-    except AssertionError as e:
-        result = e.__str__()
-    assert result == expected_result
+    assert Checker(optional_data).validate(current_data) == expected_result
+
+
+def test_operator_optional_key_assert():
+    with pytest.raises(AssertionError):
+        Checker({OptionalKey('key'): 'value'}).validate({})
