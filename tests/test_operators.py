@@ -7,7 +7,7 @@ from checker import Checker, And, Or, OptionalKey
 OR_DATA = [
     [(int, None), 1, None],
     [(int, None), None, None],
-    [(int, None), '1', 'Not valid data Or(\'int\', None)\n\tcurrent value "1" is not <class \'int\'>\n\tcurrent value "1" is not None']
+    [(int, None), '1', 'Not valid data Or(\'int\', None)\n\tcurrent value "1" is not int\n\tcurrent value "1" is not None']
 ]
 AND_DATA = [
     [(int, lambda x: x > 0), 1, None],

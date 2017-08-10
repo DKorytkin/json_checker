@@ -7,12 +7,15 @@ Checker
 
 **Checker** is a library for validating Python data structures,
 such as those obtained from JSON (or something else) to Python data-types.
+Checker has a parameter (soft=True) that allows you validate all json and
+raise all errors after validation done, it`s very easy API testing
+**Checker** is main purpose testing API
 
 
 Installation
 -------------------------------------------------------------------------------
 
-git clone https://github.com/DKorytkin/Checker.git
+pip install git+https://github.com/DKorytkin/Checker.git
 
 
 Example
@@ -61,8 +64,8 @@ otherwise it will raise ``CheckerException``.
     >>> Checker(int).validate('123')
     Traceback (most recent call last):
     ...
-    CheckerException:
-    TypeCheckerError: current value 123 is not <class 'int'>
+    checker_exceptions.TypeCheckerError:
+    current value "123" is not int
 
 
 Lists, similar containers
@@ -82,16 +85,17 @@ and if have not valid data raise exception after validation
     >>> Checker([str], soft=True).validate((1, 2, 3))
     Traceback (most recent call last):
     ...
-    checker_exceptions.ListCheckerError:
-    TypeCheckerError: current value 1 is not <class 'str'>
-    TypeCheckerError: current value 2 is not <class 'str'>
-    TypeCheckerError: current value 3 is not <class 'str'>
+    checker_exceptions.CheckerError:
+    ListCheckerErrors:
+    current value 1 is not str
+    current value 2 is not str
+    current value 3 is not str
 
     >>> Checker([str]).validate((1, 2, 3))
     Traceback (most recent call last):
     ...
     checker_exceptions.ListCheckerError:
-    TypeCheckerError: current value 1 is not <class 'str'>
+    current value 1 is not str
 
 Dictionaries
 ~~~~~~~~~~~~
@@ -109,7 +113,7 @@ key-value pairs:
     ...
     checker_exceptions.DictCheckerError:
     From key="second_key"
-        current value 2 is not <class 'int'>
+        current value 2 is not int
 
 
 Operators Or, And, OptionalKey
@@ -131,7 +135,7 @@ try it:
     Traceback (most recent call last):
     ...
     checker_exceptions.CheckerError:
-        Not valid data And(<class 'int'>, <function <lambda> at 0x7f54ceb26ea0>)
+        Not valid data And('int', '<lambda>')
 
 
 If you need validation not required data value, use Or operator
@@ -150,7 +154,10 @@ try it:
     Traceback (most recent call last):
     ...
     checker_exceptions.CheckerError:
-        Not valid data Or(<class 'int'>, None)
+    Not valid data Or('int', None)
+        current value "122" is not int
+        current value "122" is not None
+
 
 If you need validate no required dict key, use OptionalKey
 
@@ -167,4 +174,4 @@ If you need validate no required dict key, use OptionalKey
     ...
     checker_exceptions.DictCheckerError:
     From key="OptionalKey(key2)"
-        current value "value2" is not <class 'int'>
+        current value "value2" is not int
