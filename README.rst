@@ -61,8 +61,8 @@ otherwise it will raise ``CheckerException``.
     >>> Checker(int).validate('123')
     Traceback (most recent call last):
     ...
-    CheckerException:
-    TypeCheckerError: current value 123 is not <class 'int'>
+    checker_exceptions.TypeCheckerError:
+    current value "123" is not <class 'int'>
 
 
 Lists, similar containers
@@ -82,16 +82,17 @@ and if have not valid data raise exception after validation
     >>> Checker([str], soft=True).validate((1, 2, 3))
     Traceback (most recent call last):
     ...
-    checker_exceptions.ListCheckerError:
-    TypeCheckerError: current value 1 is not <class 'str'>
-    TypeCheckerError: current value 2 is not <class 'str'>
-    TypeCheckerError: current value 3 is not <class 'str'>
+    checker_exceptions.CheckerError:
+    ListCheckerErrors:
+    current type <class 'int'>, expected type <class 'str'>, current value 1
+    current type <class 'int'>, expected type <class 'str'>, current value 2
+    current type <class 'int'>, expected type <class 'str'>, current value 3
 
     >>> Checker([str]).validate((1, 2, 3))
     Traceback (most recent call last):
     ...
     checker_exceptions.ListCheckerError:
-    TypeCheckerError: current value 1 is not <class 'str'>
+    current value 1 is not <class 'str'>
 
 Dictionaries
 ~~~~~~~~~~~~
@@ -131,7 +132,7 @@ try it:
     Traceback (most recent call last):
     ...
     checker_exceptions.CheckerError:
-        Not valid data And(<class 'int'>, <function <lambda> at 0x7f54ceb26ea0>)
+        Not valid data And('int', '<lambda>')
 
 
 If you need validation not required data value, use Or operator
@@ -150,7 +151,10 @@ try it:
     Traceback (most recent call last):
     ...
     checker_exceptions.CheckerError:
-        Not valid data Or(<class 'int'>, None)
+    Not valid data Or(<class 'int'>, None)
+        current value "122" is not <class 'int'>
+        current value "122" is not None
+
 
 If you need validate no required dict key, use OptionalKey
 
