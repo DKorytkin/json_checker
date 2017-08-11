@@ -8,8 +8,6 @@ from checker_exceptions import (
     DictCheckerError,
 )
 
-__version__ = 1.0
-
 
 SUPPORT_ITER_OBJECTS = (list, tuple, set, frozenset)
 
