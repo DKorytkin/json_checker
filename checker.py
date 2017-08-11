@@ -57,9 +57,10 @@ def _format_data(data):
 
 class BaseChecker(object):
 
-    def __init__(self, data, soft):
+    def __init__(self, data, soft, ignore_extra_keys):
         self.expected_data = data
         self.soft = soft
+        self.ignore = ignore_extra_keys
         self.errors = []
 
     def __repr__(self):
@@ -121,8 +122,19 @@ class DictChecker(BaseChecker):
         assert self.expected_data, 'Wrong expected dict is None'
         assert isinstance(current_dict, dict), 'Current data is not dict'
 
+    def _check_keys(self, current_dict):
+        # TODO need test
+        miss_keys = []
+        if self.ignore:
+            return
+        for key in set(current_dict.keys()) ^ set(self.expected_data.keys()):
+            miss_keys.append(key)
+        if miss_keys:
+            message = ', '.join(miss_keys)
+            self.errors.append('Missing keys: {}'.format(message))
+
     def _append_errors_or_raise(self, key, result):
-        if result and type(result) is list:
+        if result and isinstance(result, list):
             result = '\n\t'.join(result)
         if result and self.soft:
             self.errors.append(DICT_ERROR_TEMPLATE.format(key, result))
@@ -131,15 +143,15 @@ class DictChecker(BaseChecker):
 
     def validate(self, data):
         self._check_dicts(data)
+        self._check_keys(data)
         for key, value in self.expected_data.items():
-            checker = Validator(value, self.soft)
-            # TODO add validate key instance
-            # TODO add validate exist keys from expected_data
+            # TODO add validate key instance or equals
             current_value = data.get(key)
             if _is_optional(key) and key.expected_data[0] not in data.keys():
                 continue
             elif _is_optional(key):
                 current_value = data.get(key.expected_data[0])
+            checker = Validator(value, self.soft, self.ignore)
             try:
                 result = checker.validate(current_value)
             except TypeCheckerError as e:
@@ -215,9 +227,10 @@ class OptionalKey(Or):
 
 class Validator(object):
 
-    def __init__(self, expected_data, soft):
+    def __init__(self, expected_data, soft, ignore_extra_keys=False):
         self.expected_data = expected_data
         self.soft = soft
+        self.ignore_extra_keys = ignore_extra_keys
         self.errors = []
 
     def __repr__(self):
@@ -233,17 +246,29 @@ class Validator(object):
     def validate(self, data):
         if _is_iter(self.expected_data):
             assert data and _is_iter(data), 'Wrong current data'
-            list_checker = ListChecker(self.expected_data, self.soft)
+            list_checker = ListChecker(
+                data=self.expected_data,
+                soft=self.soft,
+                ignore_extra_keys=self.ignore_extra_keys
+            )
             result = list_checker.validate(data)
             self._append_errors(result)
         elif _is_dict(self.expected_data):
-            dict_checker = DictChecker(self.expected_data, self.soft)
+            dict_checker = DictChecker(
+                data=self.expected_data,
+                soft=self.soft,
+                ignore_extra_keys=self.ignore_extra_keys
+            )
             self._append_errors(dict_checker.validate(data))
         elif _is_class(self.expected_data):
             result = self.expected_data.validate(data)
             self._append_errors(result)
         elif _is_type(self.expected_data):
-            type_checker = TypeChecker(self.expected_data, self.soft)
+            type_checker = TypeChecker(
+                data=self.expected_data,
+                soft=self.soft,
+                ignore_extra_keys=self.ignore_extra_keys
+            )
             # TODO FIX TypeError: object of type 'int' has no len()
             # TODO FIX TypeError: unorderable types: str() > int()
             result = type_checker.validate(data)
@@ -270,8 +295,14 @@ class Validator(object):
 
 class Checker(object):
 
-    def __init__(self, expected_data, soft=False):
+    def __init__(self, expected_data, soft=False, ignore_extra_keys=False):
+        """
+        :param expected_data:
+        :param bool soft:
+        :param bool ignore_extra_keys:
+        """
         self.expected_data = expected_data
+        self.ignore_extra_keys = ignore_extra_keys
         self.soft = soft
 
     def __repr__(self):
@@ -281,7 +312,11 @@ class Checker(object):
         return res
 
     def validate(self, data):
-        checker = Validator(self.expected_data, self.soft)
+        checker = Validator(
+            expected_data=self.expected_data,
+            soft=self.soft,
+            ignore_extra_keys=self.ignore_extra_keys
+        )
         result = checker.validate(data)
         if result:
             raise CheckerError(result)
