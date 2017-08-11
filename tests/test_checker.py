@@ -12,6 +12,8 @@ from checker_exceptions import (
 
 CHECKER_DATA_POSITIVE = [
     [int, 1],
+    [1, 1],
+    ['test', 'test'],
     [int, True],
     [str, 'test value'],
     [object, 1],
@@ -27,6 +29,7 @@ CHECKER_DATA_POSITIVE = [
     [[str], ['1'] * 1000],
     [[bool], [True, False]],
     [{'key1': int}, {'key1': 123}],
+    [{'key1': 123}, {'key1': 123}],
     [{'key1': int, 'key2': str, 'key3': bool},
      {'key1': 666, 'key2': '123', 'key3': True}],
     [{'key1': {'key2': str}}, {'key1': {'key2': '123'}}],
