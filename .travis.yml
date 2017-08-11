@@ -13,6 +13,7 @@ install:
 
 script:
  - tox
+ - echo $(ls)
 
 after_success:
   - codecov -t "$CODECOV_TOKEN"
