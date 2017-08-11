@@ -5,10 +5,12 @@ language: python
 python:
  - "3.5"
 
-script: pytest
+script:
+ - pytest
+ - echo "$CODECOV_TOKEN"
 
 install:
   - pip install codecov
 
 after_success:
-  - codecov -t $CODECOV_TOKEN
+  - codecov -t "$CODECOV_TOKEN"
