@@ -16,4 +16,5 @@ script:
  - echo $(ls)
  - echo $(ls tests)
 
-after_success: coverage combine && codecov -t "$CODECOV_TOKEN"
+after_success:
+ - codecov -t "$CODECOV_TOKEN"
