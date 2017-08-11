@@ -12,8 +12,8 @@ OR_DATA = [
 AND_DATA = [
     [(int, lambda x: x > 0), 1, None],
     [(int, bool), True, None],
-    [(int, bool), 0, "Not valid data And('int', 'bool')"],
-    [(int, lambda x: x > 0), 0, "Not valid data And('int', '<lambda>')"],
+    [(int, bool), 0, "Not valid data And('int', 'bool')\n\tcurrent value 0 is not bool"],
+    [(int, lambda x: x > 0), 0, "Not valid data And('int', '<lambda>')\n\tFunction error <lambda>"],
     # [(int, lambda x: x > 0), '1', None] # TODO unskip after fix
 ]
 OPTIONAL_DATA = [

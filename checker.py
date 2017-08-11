@@ -176,7 +176,6 @@ class Or(object):
             )
 
     def validate(self, current_data):
-        # TODO must be tested
         errors = []
         for checker in [Validator(d, soft=True) for d in self.expected_data]:
             res = checker.validate(current_data)
@@ -192,11 +191,12 @@ class And(Or):
     And(int, lambda x: 0 < x < 99)
     current data mast be checked, all conditions returned True
     """
-    # TODO must be tested
-    # TODO add view failed param
     def _format_errors(self, errors):
         if errors:
-            return 'Not valid data And{}'.format(self._format_data())
+            return 'Not valid data And{}\n\t{}'.format(
+                self._format_data(),
+                '\n\t'.join(errors)
+            )
 
 
 class OptionalKey(Or):
@@ -206,7 +206,6 @@ class OptionalKey(Or):
     {'key1': 1, OptionalKey('key2'):2}
     if current data have key 'key2' mast be checked else pass
     """
-    # TODO must be tested
     def __repr__(self):
         return REPR_TEMPLATE.format(
             class_name=self.__class__.__name__,
