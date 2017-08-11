@@ -3,14 +3,15 @@ dist: trusty
 
 language: python
 python:
+ - "2.7"
  - "3.5"
-
-script:
- - pytest
- - echo "$CODECOV_TOKEN"
 
 install:
   - pip install codecov
+  - pip install tox-travis
+
+script:
+ - tox
 
 after_success:
   - codecov -t "$CODECOV_TOKEN"
