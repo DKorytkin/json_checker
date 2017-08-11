@@ -9,12 +9,9 @@ python:
 install:
   - pip install pytest-cov
   - pip install wheel codecov coverage
-  - pip install tox-travis
 
 script:
  - py.test --cov-report xml --cov=checker
- - echo $(ls)
- - echo $(ls tests)
 
 after_success:
  - codecov -t "$CODECOV_TOKEN"

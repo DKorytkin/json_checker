@@ -120,7 +120,9 @@ VALIDATOR_DATA_POSITIVE = [
     [int, False, True, []],
     [bool, False, True, []],
     [str, False, "1", []],
-    [str, True, 1, "current value 1 is not str"]
+    [str, True, 1, "current value 1 is not str"],
+    ['test', False, "test", []],
+    [1, False, 1, []],
 ]
 VALIDATOR_DATA_ASSERT = [
     [[int], False, [], []],
