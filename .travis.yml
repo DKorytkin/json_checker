@@ -12,8 +12,8 @@ install:
   - pip install tox-travis
 
 script:
- - tox
+ - py.test --cov-report xml --cov=checker
  - echo $(ls)
  - echo $(ls tests)
 
-after_success: coverage combine && codecov
+after_success: coverage combine && codecov -t "$CODECOV_TOKEN"
