@@ -8,12 +8,12 @@ python:
 
 install:
   - pip install pytest-cov
-  - pip install codecov
+  - pip install wheel codecov coverage
   - pip install tox-travis
 
 script:
  - tox
  - echo $(ls)
+ - echo $(ls tests)
 
-after_success:
-  - codecov -t "$CODECOV_TOKEN"
+after_success: coverage combine && codecov
