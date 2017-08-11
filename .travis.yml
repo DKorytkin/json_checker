@@ -7,11 +7,14 @@ python:
  - "3.5"
 
 install:
-  - pip install codecov
+  - pip install pytest-cov
+  - pip install wheel codecov coverage
   - pip install tox-travis
 
 script:
- - tox
+ - py.test --cov-report xml --cov=checker
+ - echo $(ls)
+ - echo $(ls tests)
 
 after_success:
-  - codecov -t "$CODECOV_TOKEN"
+ - codecov -t "$CODECOV_TOKEN"
