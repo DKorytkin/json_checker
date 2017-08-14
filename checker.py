@@ -12,11 +12,13 @@ from checker_exceptions import (
 __version__ = '1.0'
 __all__ = [
     'Checker',
-   'And', 'Or', 'OptionalKey',
-   'CheckerError',
-   'TypeCheckerError',
-   'ListCheckerError',
-   'DictCheckerError',
+    'And',
+    'Or',
+    'OptionalKey',
+    'CheckerError',
+    'TypeCheckerError',
+    'ListCheckerError',
+    'DictCheckerError',
 ]
 
 
