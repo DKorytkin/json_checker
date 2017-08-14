@@ -2,7 +2,6 @@
 import pytest
 
 from checker import (
-    Checker,
     ListChecker,
     TypeChecker,
     DictChecker,
