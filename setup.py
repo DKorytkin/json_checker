@@ -14,7 +14,7 @@ setup(
     keywords='Json checker from auto tests',
     url='https://github.com/DKorytkin/Checker',
     py_modules=['checker', 'checker_exceptions'],
-    python_requires='=2.7, =3.3, =3.4, =3.5, =3.6',
+    python_requires='>=2.7',
     long_description=codecs.open('README.rst', 'r', 'utf-8').read(),
     classifiers=[
         'Programming Language :: Python :: 2.7',
