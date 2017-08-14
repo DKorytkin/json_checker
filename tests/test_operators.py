@@ -14,7 +14,7 @@ AND_DATA = [
     [(int, bool), True, None],
     [(int, bool), 0, "Not valid data And('int', 'bool')\n\tcurrent value 0 is not bool"],
     [(int, lambda x: x > 0), 0, "Not valid data And('int', '<lambda>')\n\tFunction error <lambda>"],
-    # [(int, lambda x: x > 0), '1', None] # TODO unskip after fix
+    [(int, lambda x: x > 0), '1', 'Not valid data And(\'int\', \'<lambda>\')\n\tcurrent value "1" is not int\n\tFunction error <lambda> unorderable types: str() > int()']
 ]
 OPTIONAL_DATA = [
     [{OptionalKey('key'): 'value'}, {'key': 'value'}, {'key': 'value'}],

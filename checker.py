@@ -9,6 +9,17 @@ from checker_exceptions import (
 )
 
 
+__version__ = '1.0'
+__all__ = [
+    'Checker',
+   'And', 'Or', 'OptionalKey',
+   'CheckerError',
+   'TypeCheckerError',
+   'ListCheckerError',
+   'DictCheckerError',
+]
+
+
 SUPPORT_ITER_OBJECTS = (list, tuple, set, frozenset)
 
 NOT_SUPPORTED_ITER_OBJECT_MESSAGE = 'Current data is not {}'.format(
@@ -70,7 +81,10 @@ class ListChecker(BaseChecker):
 
     def _append_errors_or_raise(self, result):
         if result and self.soft:
-            self.errors.append(result)
+            if _is_iter(result):
+                self.errors.extend(result)
+            else:
+                self.errors.append(result)
         elif result and not self.soft:
             raise ListCheckerError(result)
 
@@ -258,8 +272,13 @@ class Validator(object):
                 return result
         elif _is_func(self.expected_data):
             func = self.expected_data
-            if not func(data):
-                return 'Function error {}'.format(_format_data(func))
+            try:
+                if not func(data):
+                    return 'Function error {}'.format(_format_data(func))
+            except TypeError as e:
+                return 'Function error {}'.format(
+                    _format_data(func) + ' ' + e.__str__()
+                )
         elif self.expected_data is None:
             if self.expected_data != data:
                 return ERROR_TEMPLATE.format(

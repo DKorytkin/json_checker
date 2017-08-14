@@ -28,6 +28,7 @@ CHECKER_DATA_POSITIVE = [
     [[int], list(range(1000))],
     [[str], ['1'] * 1000],
     [[bool], [True, False]],
+    [[{'key1': int}], [{'key1': 1}, {'key1': 1}, {'key1': 1}]],
     [{'key1': int}, {'key1': 123}],
     [{'key1': 123}, {'key1': 123}],
     [{'key1': int, 'key2': str, 'key3': bool},
@@ -94,7 +95,6 @@ CHECKER_CLASS_DATA = [
 ]
 
 
-
 def _get_expected_exception(ex_object, soft=False):
     if isinstance(ex_object, SUPPORT_ITER_OBJECTS) and not soft:
         return ListCheckerError
@@ -117,6 +117,18 @@ def test_checker_positive(expected, current, soft):
 def test_checker_negative(expected, current, soft):
     with pytest.raises(_get_expected_exception(expected, soft)):
         Checker(expected, soft).validate(current)
+
+
+def test_checker_list_dicts_hard():
+    with pytest.raises(DictCheckerError):
+        c = Checker([{'key1': int}])
+        c.validate([{'key1': 1}, {'key1': 1}, {'key1': '1'}])
+
+
+def test_checker_list_dicts_soft():
+    with pytest.raises(CheckerError):
+        c = Checker([{'key1': int}], soft=True)
+        c.validate([{'key1': 1}, {'key1': 1}, {'key1': '1'}])
 
 
 @pytest.mark.parametrize('soft', [True, False])
