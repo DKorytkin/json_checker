@@ -37,13 +37,14 @@ TYPE_DATA_NEGATIVE = [
     [int, []],
 ]
 LIST_DATA_POSITIVE = [
-    [[int], False, [1, 2, 3], None],
-    [[int], True, [1, 2, 3], None],
-    [[int], False, [], None],
-    [[int], False, [True], None],
-    [[int], True, [1, '2', '3'], "ListCheckerErrors:\ncurrent value \"2\" is not int\ncurrent value \"3\" is not int"],
-    [[int], True, [1, 2, None], "ListCheckerErrors:\ncurrent value None is not int"],
-
+    [[int], False, [1, 2, 3]],
+    [[int], True, [1, 2, 3]],
+    [[int], False, []],
+    [[int], False, [True]]
+]
+LIST_DATA_POSITIVE_MESSAGE = [
+    [[int], [1, '2', '3']],
+    [[int], [1, 2, None]],
 ]
 LIST_DATA_NEGATIVE = [
     [[int], [1, '2', '3']],
@@ -55,12 +56,15 @@ LIST_DATA_NEGATIVE = [
 DICT_DATA_POSITIVE = [
     [{'test': int}, True, {'test': 666}, None],
     [{'test': int}, False, {'test': 666}, None],
-    [{'test': int}, True, {'test': '666'}, 'DictCheckerErrors:\nFrom key="test"\n\tcurrent value "666" is not int'],
     [{'test': [int]}, True, {'test': [1, 2, 3]}, None],
     [{'test': [int]}, False, {'test': [1, 2, 3]}, None],
     [{'test': {'test2': int}}, True, {'test': {'test2': 2}}, None],
     [{'test': int}, True, {'test': True}, None],
     [{'test': bool}, True, {'test': False}, None],
+]
+DICT_DATA_POSITIVE_MESSAGE = [
+    [{'test': int}, {'test': '666'}],
+    [{'test': {'test': 1}}, {'test': {'test': '666'}}]
 ]
 DICT_DATA_NEGATIVE = [
     [{'test': int}, {'test': '666'}],
@@ -85,29 +89,21 @@ VALIDATOR_DATA_POSITIVE = [
     [lambda x: x > 1, True, -12, 'Function error <lambda>'],
     [And(int, lambda x: x > 1), False, 12, []],
     [And(str, lambda x: x in ('1', '2')), False, '2', []],
-    [And(int, lambda x: x > 1), True, -12, ["Not valid data And('int', '<lambda>')\n\tFunction error <lambda>"]],
     [And(int, bool), False, True, []],
     [Or(int, None), False, 12, []],
     [Or(int, None), False, None, []],
-    [Or(int, None), False, '12', ["Not valid data Or('int', None)\n\tcurrent value \"12\" is not int\n\tcurrent value \"12\" is not None"]],
     [Or(str, lambda x: isinstance(type(x), type)), False, 12, []],
     [{OptionalKey('key'): 'value'}, False, {'key': 'value'}, []],
-    [{OptionalKey('key'): 'value'}, False, {'key2': 'value2'}, ['DictCheckerErrors:\nMissing keys: key2']],
     [None, True, None, []],
     [None, True, 12, 'current value 12 is not None'],
     [{'test': And(int, lambda x: x > 1)}, True, {'test': 666}, []],
-    [{'test': And(int, lambda x: x > 1)}, True, {'test': -666}, ["DictCheckerErrors:\nFrom key=\"test\"\n\tNot valid data And('int', '<lambda>')\n\tFunction error <lambda>"]],
-    [{'test': Or(int, None)}, True, {'test': 'None'}, ['DictCheckerErrors:\nFrom key="test"\n\tNot valid data Or(\'int\', None)\n\tcurrent value "None" is not int\n\tcurrent value "None" is not None']],
     [{'test': Or(int, None)}, True, {'test': None}, []],
     [{'test': int}, True, {'test': 666}, []],
-    [{'test': int}, True, {'test': '666'}, ['DictCheckerErrors:\nFrom key="test"\n\tcurrent value "666" is not int']],
     [{'test': int}, False, {'test': 666}, []],
     [{'test': [int]}, False, {'test': [1, 2, 3]}, []],
-    [{'test': [str]}, True, {'test': ['1', 2, '3']}, ["DictCheckerErrors:\nFrom key=\"test\"\n\tListCheckerErrors:\ncurrent value 2 is not str"]],
     [{'test': {'test2': int}}, True, {'test': {'test2': 2}}, []],
     [[int], False, [1, 2, 3], []],
     [[str], True, ['1', '2', '3'], []],
-    [[str], True, [1, '2', 3], ["ListCheckerErrors:\ncurrent value 1 is not str\ncurrent value 3 is not str"]],
     [[int], False, [True], []],
     [[bool], False, [True, False, True], []],
     [[object], False, [12, False, True, 'test'], []],
@@ -116,7 +112,7 @@ VALIDATOR_DATA_POSITIVE = [
     [int, True, 123, []],
     [123, True, 123, []],
     ['test', True, 'test', []],
-    [int, True, '123', "current value \"123\" is not int"],
+    [int, True, '123', 'current value "123" is not int'],
     [int, False, 123, []],
     [int, False, True, []],
     [bool, False, True, []],
@@ -124,6 +120,16 @@ VALIDATOR_DATA_POSITIVE = [
     [str, True, 1, "current value 1 is not str"],
     ['test', False, "test", []],
     [1, False, 1, []],
+]
+VALIDATOR_DATA_POSITIVE_MESSAGE = [
+    [And(int, lambda x: x > 1), -12, 'Not valid data And'],
+    [Or(int, None), '12', 'Not valid data Or'],
+    [{OptionalKey('key'): 'value'}, {'key2': 'value2'}, 'DictCheckerErrors'],
+    [{'test': And(int, lambda x: x > 1)}, {'test': -666}, 'DictCheckerErrors'],
+    [{'test': Or(int, None)}, {'test': 'None'}, 'DictCheckerErrors'],
+    [{'test': int}, {'test': '666'}, 'DictCheckerErrors'],
+    [{'test': [str]}, {'test': ['1', 2, '3']}, 'DictCheckerErrors'],
+    [[str], [1, '2', 3], 'ListCheckerErrors:'],
 ]
 VALIDATOR_DATA_ASSERT = [
     [[int], False, [], []],
@@ -145,9 +151,16 @@ def test_type_checker_negative(type_data, current_data):
 
 @pytest.mark.parametrize('data', LIST_DATA_POSITIVE)
 def test_list_checker_positive(data):
-    list_data, soft, current_data, expected_result = data
+    list_data, soft, current_data = data
     list_checker = ListChecker(list_data, soft=soft)
-    assert list_checker.validate(current_data) == expected_result
+    assert list_checker.validate(current_data) is None
+
+
+@pytest.mark.parametrize('data', LIST_DATA_POSITIVE_MESSAGE)
+def test_list_checker_positive_message(data):
+    list_data, current_data = data
+    list_checker = ListChecker(list_data, soft=True)
+    assert 'ListCheckerErrors' in list_checker.validate(current_data)
 
 
 @pytest.mark.parametrize(('list_data', 'current_data'), LIST_DATA_NEGATIVE)
@@ -161,6 +174,13 @@ def test_dict_checker_positive(data):
     dict_data, soft, current_data, expected_result = data
     dict_checker = DictChecker(dict_data, soft=soft, ignore=False)
     assert dict_checker.validate(current_data) == expected_result
+
+
+@pytest.mark.parametrize('data', DICT_DATA_POSITIVE_MESSAGE)
+def test_dict_checker_positive_message(data):
+    dict_data, current_data = data
+    dict_checker = DictChecker(dict_data, soft=True, ignore=False)
+    assert 'DictCheckerErrors' in dict_checker.validate(current_data)
 
 
 @pytest.mark.parametrize(('dict_data', 'current_data'), DICT_DATA_NEGATIVE)
@@ -180,3 +200,10 @@ def test_validator_positive(data):
     validator_data, soft, current_data, expected_result = data
     validator = Validator(validator_data, soft=soft, ignore_extra_keys=False)
     assert validator.validate(current_data) == expected_result
+
+
+@pytest.mark.parametrize('data', VALIDATOR_DATA_POSITIVE_MESSAGE)
+def test_validator_positive_message(data):
+    validator_data, current_data, expected_result = data
+    validator = Validator(validator_data, soft=True, ignore_extra_keys=False)
+    assert expected_result in validator.validate(current_data)[0]

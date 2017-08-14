@@ -6,19 +6,24 @@ from checker import Checker, And, Or, OptionalKey
 
 OR_DATA = [
     [(int, None), 1, None],
-    [(int, None), None, None],
-    [(int, None), '1', 'Not valid data Or(\'int\', None)\n\tcurrent value "1" is not int\n\tcurrent value "1" is not None']
+    [(int, None), None, None]
 ]
 AND_DATA = [
     [(int, lambda x: x > 0), 1, None],
-    [(int, bool), True, None],
-    [(int, bool), 0, "Not valid data And('int', 'bool')\n\tcurrent value 0 is not bool"],
-    [(int, lambda x: x > 0), 0, "Not valid data And('int', '<lambda>')\n\tFunction error <lambda>"],
-    [(int, lambda x: x > 0), '1', 'Not valid data And(\'int\', \'<lambda>\')\n\tcurrent value "1" is not int\n\tFunction error <lambda> unorderable types: str() > int()']
+    [(int, bool), True, None]
+]
+AND_DATA_MESSAGE = [
+    [(int, bool), 0],
+    [(int, lambda x: x > 0), 0],
+    [(int, lambda x: x > 0), '1']
 ]
 OPTIONAL_DATA = [
     [{OptionalKey('key'): 'value'}, {'key': 'value'}, {'key': 'value'}],
-    [{OptionalKey('key'): 'value', 'key2': 'value2'}, {'key2': 'value2'}, {'key2': 'value2'}]
+    [
+        {OptionalKey('key'): 'value', 'key2': 'value2'},
+        {'key2': 'value2'},
+        {'key2': 'value2'}
+    ]
 ]
 OPERATOR_CLASS_DATA = [
     [Or, 1, 'Or((1,))'],
@@ -33,10 +38,20 @@ def test_operator_or(data):
     assert Or(*or_data).validate(current_data) == expected_result
 
 
+def test_operator_or_message():
+    assert 'Not valid data Or' in Or(int, None).validate('1')
+
+
 @pytest.mark.parametrize('data', AND_DATA)
 def test_operator_and(data):
     and_data, current_data, expected_result = data
     assert And(*and_data).validate(current_data) == expected_result
+
+
+@pytest.mark.parametrize('data', AND_DATA_MESSAGE)
+def test_operator_and(data):
+    and_data, current_data = data
+    assert 'Not valid data And' in And(*and_data).validate(current_data)
 
 
 @pytest.mark.parametrize('data', OPTIONAL_DATA)
