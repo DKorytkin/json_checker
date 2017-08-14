@@ -18,7 +18,7 @@ AND_DATA = [
 ]
 OPTIONAL_DATA = [
     [{OptionalKey('key'): 'value'}, {'key': 'value'}, {'key': 'value'}],
-    [{OptionalKey('key'): 'value'}, {'key2': 'value2'}, {'key2': 'value2'}]
+    [{OptionalKey('key'): 'value', 'key2': 'value2'}, {'key2': 'value2'}, {'key2': 'value2'}]
 ]
 
 

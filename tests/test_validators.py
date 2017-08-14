@@ -127,19 +127,6 @@ VALIDATOR_DATA_POSITIVE = [
 VALIDATOR_DATA_ASSERT = [
     [[int], False, [], []],
 ]
-CHECKER_CLASS_DATA = [
-    [ListChecker, [1, 2, 3], 'ListChecker([1, 2, 3])'],
-    [TypeChecker, 1, 'TypeChecker(1)'],
-    [DictChecker, {'t': 1}, "DictChecker({'t': 1})"],
-    [Validator, 1, 'Validator(1)'],
-    [Checker, 1, '1'],
-    [Checker, lambda x: x == 1, '<lambda>']
-]
-OPERATOR_CLASS_DATA = [
-    [Or, 1, 'Or((1,))'],
-    [And, 1, 'And((1,))'],
-    [OptionalKey, 'test', 'OptionalKey(test)'],
-]
 
 
 @pytest.mark.parametrize('data', TYPE_DATA_POSITIVE)
@@ -171,38 +158,24 @@ def test_list_checker_negative(list_data, current_data):
 @pytest.mark.parametrize('data', DICT_DATA_POSITIVE)
 def test_dict_checker_positive(data):
     dict_data, soft, current_data, expected_result = data
-    dict_checker = DictChecker(dict_data, soft=soft)
+    dict_checker = DictChecker(dict_data, soft=soft, ignore=False)
     assert dict_checker.validate(current_data) == expected_result
 
 
 @pytest.mark.parametrize(('dict_data', 'current_data'), DICT_DATA_NEGATIVE)
 def test_dict_checker_negative(dict_data, current_data):
     with pytest.raises(DictCheckerError):
-        DictChecker(dict_data, soft=False).validate(current_data)
+        DictChecker(dict_data, soft=False, ignore=False).validate(current_data)
 
 
 @pytest.mark.parametrize(('dict_data', 'current_data'), DICT_DATA_ASSERT)
 def test_dict_checker_assert(dict_data, current_data):
     with pytest.raises(AssertionError):
-        DictChecker(dict_data, soft=False).validate(current_data)
+        DictChecker(dict_data, soft=False, ignore=False).validate(current_data)
 
 
 @pytest.mark.parametrize('data', VALIDATOR_DATA_POSITIVE)
 def test_validator_positive(data):
     validator_data, soft, current_data, expected_result = data
-    validator = Validator(validator_data, soft=soft)
+    validator = Validator(validator_data, soft=soft, ignore_extra_keys=True)
     assert validator.validate(current_data) == expected_result
-
-
-@pytest.mark.parametrize('data', CHECKER_CLASS_DATA)
-def test_repr_checker_class(data):
-    data_class, test_data, expected_result = data
-    c = data_class(test_data, soft=True)
-    assert c.__str__() == expected_result
-
-
-@pytest.mark.parametrize('data', OPERATOR_CLASS_DATA)
-def test_repr_operator_class(data):
-    data_class, test_data, expected_result = data
-    c = data_class(test_data)
-    assert c.__str__() == expected_result
