@@ -17,7 +17,9 @@ raise all errors after validation done, it`s very easy API testing
 Installation
 -------------------------------------------------------------------------------
 
-pip install checker
+.. code:: bash
+
+    $ pip install checker
 
 
 Example
