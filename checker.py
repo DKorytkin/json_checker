@@ -43,10 +43,6 @@ def _is_optional(data):
     return issubclass(data.__class__, OptionalKey)
 
 
-def _is_equals_types(current, expected):
-    return bool(type(expected) == type(current))
-
-
 def _format_data(data):
     if callable(data):
         return data.__name__
@@ -270,12 +266,11 @@ class Validator(object):
                     _format_data(data),
                     _format_data(self.expected_data)
                 )
-        elif _is_equals_types(data, self.expected_data):
-            if self.expected_data != data:
-                return ERROR_TEMPLATE.format(
-                    _format_data(data),
-                    _format_data(self.expected_data)
-                )
+        elif self.expected_data != data:
+            return ERROR_TEMPLATE.format(
+                _format_data(data),
+                _format_data(self.expected_data)
+            )
         return self.errors
 
 

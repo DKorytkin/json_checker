@@ -20,6 +20,11 @@ OPTIONAL_DATA = [
     [{OptionalKey('key'): 'value'}, {'key': 'value'}, {'key': 'value'}],
     [{OptionalKey('key'): 'value', 'key2': 'value2'}, {'key2': 'value2'}, {'key2': 'value2'}]
 ]
+OPERATOR_CLASS_DATA = [
+    [Or, 1, 'Or((1,))'],
+    [And, 1, 'And((1,))'],
+    [OptionalKey, 'test', 'OptionalKey(test)'],
+]
 
 
 @pytest.mark.parametrize('data', OR_DATA)
@@ -43,3 +48,10 @@ def test_operator_optional_key(data):
 def test_operator_optional_key_assert():
     with pytest.raises(AssertionError):
         Checker({OptionalKey('key'): 'value'}).validate({})
+
+
+@pytest.mark.parametrize('data', OPERATOR_CLASS_DATA)
+def test_repr_operator_class(data):
+    data_class, test_data, expected_result = data
+    c = data_class(test_data)
+    assert c.__str__() == expected_result

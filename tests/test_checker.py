@@ -85,6 +85,14 @@ CHECKER_DATA_ASSERT = [
     [{'test': {'test': bool}}, {'test': {}}],
     [{'test': {'test': bool}}, {'test': 'test'}],
 ]
+CHECKER_CLASS_DATA = [
+    [Checker, 1, '1'],
+    [Checker, 'test', 'test'],
+    [Checker, [1, 2, 3], '[1, 2, 3]'],
+    [Checker, {'key': 1}, "{'key': 1}"],
+    [Checker, lambda x: x == 1, '<lambda>']
+]
+
 
 
 def _get_expected_exception(ex_object, soft=False):
@@ -116,3 +124,10 @@ def test_checker_negative(expected, current, soft):
 def test_checker_assert(expected, current, soft):
     with pytest.raises(AssertionError):
         Checker(expected, soft).validate(current)
+
+
+@pytest.mark.parametrize('data', CHECKER_CLASS_DATA)
+def test_repr_checker_class(data):
+    data_class, test_data, expected_result = data
+    c = data_class(test_data, soft=True)
+    assert c.__str__() == expected_result
