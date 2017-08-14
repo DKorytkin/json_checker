@@ -6,7 +6,7 @@ import checker
 
 
 setup(
-    name=checker.__name__,
+    name="Checker",
     version=checker.__version__,
     author='Denis Korytkin',
     author_email='dkorytkin@gmail.com',
