@@ -46,6 +46,8 @@ CHECKER_DATA_POSITIVE = [
 ]
 CHECKER_DATA_NEGATIVE = [
     [int, '5'],
+    [1, '1'],
+    ['test', True],
     [bool, 1],
     [str, True],
     [dict, 12],

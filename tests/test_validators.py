@@ -93,7 +93,7 @@ VALIDATOR_DATA_POSITIVE = [
     [Or(int, None), False, '12', ["Not valid data Or('int', None)\n\tcurrent value \"12\" is not int\n\tcurrent value \"12\" is not None"]],
     [Or(str, lambda x: isinstance(type(x), type)), False, 12, []],
     [{OptionalKey('key'): 'value'}, False, {'key': 'value'}, []],
-    [{OptionalKey('key'): 'value'}, False, {'key2': 'value2'}, []],
+    [{OptionalKey('key'): 'value'}, False, {'key2': 'value2'}, ['DictCheckerErrors:\nMissing keys: key2']],
     [None, True, None, []],
     [None, True, 12, 'current value 12 is not None'],
     [{'test': And(int, lambda x: x > 1)}, True, {'test': 666}, []],
@@ -115,6 +115,8 @@ VALIDATOR_DATA_POSITIVE = [
     [[{'test1': int, 'test2': str, 'test3': bool}],
      False, [{'test1': 666, 'test2': '22', 'test3': False}], []],
     [int, True, 123, []],
+    [123, True, 123, []],
+    ['test', True, 'test', []],
     [int, True, '123', "current value \"123\" is not int"],
     [int, False, 123, []],
     [int, False, True, []],
@@ -177,5 +179,5 @@ def test_dict_checker_assert(dict_data, current_data):
 @pytest.mark.parametrize('data', VALIDATOR_DATA_POSITIVE)
 def test_validator_positive(data):
     validator_data, soft, current_data, expected_result = data
-    validator = Validator(validator_data, soft=soft, ignore_extra_keys=True)
+    validator = Validator(validator_data, soft=soft, ignore_extra_keys=False)
     assert validator.validate(current_data) == expected_result
