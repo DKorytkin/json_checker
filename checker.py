@@ -6,6 +6,7 @@ from checker_exceptions import (
     TypeCheckerError,
     ListCheckerError,
     DictCheckerError,
+    MissKeyCheckerError
 )
 
 
@@ -157,9 +158,11 @@ class DictChecker(BaseChecker):
             self._append_errors_or_raise(key, result)
         if not self.ignore:
             miss_keys = set(data.keys()) ^ set(validated_keys)
-            if miss_keys:
-                message = ', '.join(miss_keys)
-                self.errors.append('Missing keys: {}'.format(message))
+            message = 'Missing keys: {}'.format(', '.join(miss_keys))
+            if miss_keys and self.soft:
+                self.errors.append(message)
+            elif miss_keys and not self.soft:
+                raise MissKeyCheckerError(message)
         return self._format_errors()
 
 
@@ -246,10 +249,7 @@ class Validator(object):
     def validate(self, data):
         if _is_iter(self.expected_data):
             assert data and _is_iter(data), 'Wrong current data'
-            list_checker = ListChecker(
-                data=self.expected_data,
-                soft=self.soft
-            )
+            list_checker = ListChecker(self.expected_data, self.soft)
             result = list_checker.validate(data)
             self._append_errors(result)
         elif _is_dict(self.expected_data):
@@ -263,13 +263,11 @@ class Validator(object):
             result = self.expected_data.validate(data)
             self._append_errors(result)
         elif _is_type(self.expected_data):
-            type_checker = TypeChecker(
-                data=self.expected_data,
-                soft=self.soft
-            )
-            # TODO FIX TypeError: object of type 'int' has no len()
-            # TODO FIX TypeError: unorderable types: str() > int()
-            result = type_checker.validate(data)
+            type_checker = TypeChecker(self.expected_data, self.soft)
+            try:
+                result = type_checker.validate(data)
+            except TypeError as e:
+                result = e.__str__()
             if result:
                 return result
         elif _is_func(self.expected_data):
