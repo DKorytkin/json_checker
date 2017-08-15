@@ -21,3 +21,7 @@ class ListCheckerError(CheckerError):
 
 class DictCheckerError(CheckerError):
     pass
+
+
+class MissKeyCheckerError(CheckerError):
+    pass
