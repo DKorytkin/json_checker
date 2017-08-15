@@ -180,7 +180,7 @@ class Or(object):
     def __repr__(self):
         return REPR_TEMPLATE.format(
             class_name=self.__class__.__name__,
-            current=self.expected_data
+            current=self._format_data()
         )
 
     def _format_data(self):
@@ -196,9 +196,12 @@ class Or(object):
     def validate(self, current_data):
         errors = []
         for checker in [Validator(d, soft=True) for d in self.expected_data]:
-            res = checker.validate(current_data)
-            if res:
-                errors.append(res)
+            try:
+                result = checker.validate(current_data)
+            except AssertionError as e:
+                result = e.__str__()
+            if result:
+                errors.append(result)
         return self._format_errors(errors)
 
 
