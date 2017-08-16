@@ -29,7 +29,7 @@ NOT_SUPPORTED_ITER_OBJECT_MESSAGE = 'Current data is not {}'.format(
     SUPPORT_ITER_OBJECTS
 )
 ERROR_TEMPLATE = 'current value {} is not {}'
-DICT_ERROR_TEMPLATE = 'From key="{}"\n\t{}'
+DICT_ERROR_TEMPLATE = 'From key="{}":\n\t{}'
 
 
 def _is_iter(data):
@@ -75,10 +75,7 @@ class BaseChecker(object):
 
     def _format_errors(self):
         if self.errors:
-            return '{}Errors:\n{}'.format(
-                self.__class__.__name__,
-                '\n'.join(self.errors)
-            )
+            return '\n'.join(self.errors)
 
 
 class ListChecker(BaseChecker):
