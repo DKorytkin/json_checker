@@ -26,8 +26,8 @@ OPTIONAL_DATA = [
     ]
 ]
 OPERATOR_CLASS_DATA = [
-    [Or, 1, 'Or((1,))'],
-    [And, 1, 'And((1,))'],
+    [Or, 1, 'Or(1,)'],
+    [And, 1, 'And(1,)'],
     [OptionalKey, 'test', 'OptionalKey(test)'],
 ]
 
