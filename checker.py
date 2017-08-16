@@ -29,7 +29,7 @@ NOT_SUPPORTED_ITER_OBJECT_MESSAGE = 'Current data is not {}'.format(
     SUPPORT_ITER_OBJECTS
 )
 ERROR_TEMPLATE = 'current value {} is not {}'
-DICT_ERROR_TEMPLATE = 'From key="{}":\n\t{}'
+DICT_ERROR_TEMPLATE = 'From key="{}":\n{}'
 
 
 def _is_iter(data):
@@ -61,7 +61,7 @@ def _format_data(data):
         return data.__name__
     if data is None:
         return data
-    if isinstance(type(data), type):
+    if type(data) is str:
         return json.dumps(data)
     return str(data)
 
@@ -186,10 +186,37 @@ class Or(object):
 
     def _format_errors(self, errors):
         if len(errors) == len(self.expected_data):
-            return 'Not valid data Or{}'.format(self._format_data())
+            return 'Not valid data Or{}\n\t{}'.format(
+                self._format_data(),
+                '\n\t'.join(errors)
+            )
+
+    def _get_need_dict(self, data):
+        if not _is_dict(data):
+            return
+        dicts = {}
+        current_keys = set(data.keys())
+        for d in self.expected_data:
+            if not _is_dict(d):
+                continue
+            ex_keys = set()
+            for k in d.keys():
+                if _is_optional(k) and k.expected_data not in data.keys():
+                    continue
+                ex_keys.add(k)
+            dicts[len(ex_keys - current_keys)] = d
+        return dicts.get(min(dicts.keys()))
 
     def validate(self, current_data):
         errors = []
+        if _is_dict(current_data):
+            need_data = self._get_need_dict(current_data)
+            validator = Validator(need_data, soft=True)
+            result = validator.validate(current_data)
+            if result:
+                errors.append(result)
+            errors.append('')
+            return self._format_errors(errors)
         for checker in [Validator(d, soft=True) for d in self.expected_data]:
             try:
                 result = checker.validate(current_data)
