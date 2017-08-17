@@ -24,12 +24,9 @@ __all__ = [
 
 
 SUPPORT_ITER_OBJECTS = (list, tuple, set, frozenset)
-
 NOT_SUPPORTED_ITER_OBJECT_MESSAGE = 'Current data is not {}'.format(
     SUPPORT_ITER_OBJECTS
 )
-ERROR_TEMPLATE = 'current value {} is not {}'
-DICT_ERROR_TEMPLATE = 'From key="{}":\n{}'
 
 
 def _is_iter(data):
@@ -64,6 +61,13 @@ def _format_data(data):
     if type(data) is str:
         return json.dumps(data)
     return str(data)
+
+
+def _format_error_message(expected_data, current_data):
+    return 'current value {} is not {}'.format(
+        _format_data(current_data),
+        _format_data(expected_data)
+    )
 
 
 class BaseChecker(object):
@@ -106,14 +110,11 @@ class TypeChecker(BaseChecker):
 
     def _format_errors(self):
         if self.errors:
-            return ERROR_TEMPLATE.format(*self.errors)
+            return _format_error_message(*self.errors)
 
     def validate(self, current_data):
         if not isinstance(current_data, self.expected_data):
-            self.errors = (
-                _format_data(current_data),
-                _format_data(self.expected_data)
-            )
+            self.errors = (self.expected_data, current_data)
             if self.soft:
                 return self._format_errors()
             raise TypeCheckerError(self._format_errors())
@@ -131,12 +132,13 @@ class DictChecker(BaseChecker):
         assert isinstance(current_dict, dict), 'Current data is not dict'
 
     def _append_errors_or_raise(self, key, result):
+        error_message = 'From key="{}":\n{}'
         if result and isinstance(result, list):
             result = '\n\t'.join(result)
         if result and self.soft:
-            self.errors.append(DICT_ERROR_TEMPLATE.format(key, result))
+            self.errors.append(error_message.format(key, result))
         elif result and not self.soft:
-            raise DictCheckerError(DICT_ERROR_TEMPLATE.format(key, result))
+            raise DictCheckerError(error_message.format(key, result))
 
     def validate(self, data):
         self._check_dicts(data)
@@ -192,8 +194,6 @@ class Or(object):
             )
 
     def _get_need_dict(self, data):
-        if not _is_dict(data):
-            return
         dicts = {}
         current_keys = set(data.keys())
         for d in self.expected_data:
@@ -204,19 +204,16 @@ class Or(object):
                 if _is_optional(k) and k.expected_data not in data.keys():
                     continue
                 ex_keys.add(k)
-            dicts[len(ex_keys - current_keys)] = d
+            dicts[len(ex_keys ^ current_keys)] = d
         return dicts.get(min(dicts.keys()))
 
     def validate(self, current_data):
         errors = []
         if _is_dict(current_data):
             need_data = self._get_need_dict(current_data)
+            assert need_data, 'Wrong data'
             validator = Validator(need_data, soft=True)
-            result = validator.validate(current_data)
-            if result:
-                errors.append(result)
-            errors.append('')
-            return self._format_errors(errors)
+            return validator.validate(current_data)
         for checker in [Validator(d, soft=True) for d in self.expected_data]:
             try:
                 result = checker.validate(current_data)
@@ -296,15 +293,9 @@ class Validator(object):
                 )
         elif self.expected_data is None:
             if self.expected_data != data:
-                return ERROR_TEMPLATE.format(
-                    _format_data(data),
-                    _format_data(self.expected_data)
-                )
+                return _format_error_message(self.expected_data, data)
         elif self.expected_data != data:
-            return ERROR_TEMPLATE.format(
-                _format_data(data),
-                _format_data(self.expected_data)
-            )
+            return _format_error_message(self.expected_data, data)
 
 
 class Checker(object):
