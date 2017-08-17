@@ -93,6 +93,8 @@ VALIDATOR_DATA_POSITIVE = [
     [Or(int, None), False, 12, None],
     [Or(int, None), False, None, None],
     [Or(str, lambda x: isinstance(type(x), type)), False, 12, None],
+    [Or({'key1': int}, {'key2': str}), False, {'key2': 12},
+     'From key="key2":\ncurrent value 12 is not str'],
     [{OptionalKey('key'): 'value'}, False, {'key': 'value'}, None],
     [None, True, None, None],
     [None, True, 12, 'current value 12 is not None'],

@@ -194,6 +194,10 @@ class Or(object):
             )
 
     def _get_need_dict(self, data):
+        """
+        :param dict data: current dict
+        :return:
+        """
         dicts = {}
         current_keys = set(data.keys())
         for d in self.expected_data:

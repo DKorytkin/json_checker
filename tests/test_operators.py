@@ -30,6 +30,17 @@ OPERATOR_CLASS_DATA = [
     [And, 1, 'And(1,)'],
     [OptionalKey, 'test', 'OptionalKey(test)'],
 ]
+TEST_DICT = {OptionalKey('key2'): str, 'test': int}
+OPERATOR_OR_DICT_DATA = [
+    [({'key1': 1}, {'key2': str}), {'key2': 'test'}, {'key2': str}],
+    [({'key1': 1}, {'key2': str}), {'key1': 'test'}, {'key1': 1}],
+    [({'key1': 1, 'test': 2}, {'key2': str, 'test': 2}),
+     {'key1': 'test', 'test': 2}, {'key1': 1, 'test': 2}],
+    [({'key1': 1}, {'key2': str, 'key1': int, 'key3': bool}),
+     {'key1': 'test'}, {'key1': 1}],
+    [({'key1': 1}, [str]), {'key1': 1, 'key2': 'test'}, {'key1': 1}],
+    [({'key1': 1, 'test': int}, TEST_DICT), {'test': 2}, TEST_DICT],
+]
 
 
 @pytest.mark.parametrize('data', OR_DATA)
@@ -70,3 +81,10 @@ def test_repr_operator_class(data):
     data_class, test_data, expected_result = data
     c = data_class(test_data)
     assert c.__str__() == expected_result
+
+
+@pytest.mark.parametrize('data', OPERATOR_OR_DICT_DATA)
+def test_operator_or_need_dict(data):
+    or_data, current_data, expected_data = data
+    validator = Or(*or_data)
+    assert validator._get_need_dict(current_data) == expected_data

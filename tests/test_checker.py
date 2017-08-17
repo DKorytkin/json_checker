@@ -6,7 +6,8 @@ from checker_exceptions import (
     CheckerError,
     TypeCheckerError,
     ListCheckerError,
-    DictCheckerError
+    DictCheckerError,
+    MissKeyCheckerError
 )
 
 
@@ -143,3 +144,8 @@ def test_repr_checker_class(data):
     data_class, test_data, expected_result = data
     c = data_class(test_data, soft=True)
     assert c.__str__() == expected_result
+
+
+def test_miss_keys():
+    with pytest.raises(MissKeyCheckerError):
+        Checker({'k1': int}).validate({'k1': 12, 'k2': 'test'})
