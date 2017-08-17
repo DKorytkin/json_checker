@@ -10,8 +10,18 @@ Checker
 **Checker** is a library for validating Python data structures,
 such as those obtained from JSON (or something else) to Python data-types.
 Checker has a parameter (soft=True) that allows you validate all json and
-raise all errors after validation done, it`s very easy API testing
-**Checker** is main purpose testing API
+raise all errors after validation done, it`s very profitable from API testing:
+
+.. code:: python
+    >>> import requests
+    >>>
+    >>> from checker import Checker
+    >>>
+    >>>
+    >>> def test_api():
+    >>>     res = requests.get(API_URL).json()
+    >>>     assert Checker(EXPECTED_RESPONSE, soft=True).validate(res) == res
+
 
 
 Installation
