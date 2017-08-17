@@ -56,7 +56,7 @@ validating a list of entries with personal information:
 
 If data is valid, ``Checker.validate`` will return the validated data
 
-If data is invalid, ``Checker`` will raise ``CheckerException``.
+If data is invalid, ``Checker`` will raise ``CheckerError``.
 
 
 How ``Checker`` validates data
@@ -67,7 +67,7 @@ Types
 
 If ``Checker(...)`` encounters a type (such as ``int``, ``str``),
 it will check if the corresponding piece of data is an instance of that type,
-otherwise it will raise ``CheckerException``.
+otherwise it will raise ``CheckerError``.
 
 .. code:: python
 
