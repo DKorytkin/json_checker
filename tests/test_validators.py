@@ -24,7 +24,7 @@ TYPE_DATA_POSITIVE = [
     # [len, False, [1, 2], None],  # TODO unskip after fix
     [bool, False, True, None],
     [str, False, "1", None],
-    [int, True, '123', "current value \"123\" is not int"],
+    [int, True, '123', "current value '123' is not int"],
     [bool, True, 1, "current value 1 is not bool"],
     [str, True, [1], "current value [1] is not str"],
 ]
@@ -114,7 +114,7 @@ VALIDATOR_DATA_POSITIVE = [
     [int, True, 123, None],
     [123, True, 123, None],
     ['test', True, 'test', None],
-    [int, True, '123', 'current value "123" is not int'],
+    [int, True, '123', "current value '123' is not int"],
     [int, False, 123, None],
     [int, False, True, None],
     [bool, False, True, None],

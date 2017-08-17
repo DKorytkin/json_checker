@@ -1,6 +1,4 @@
 
-import json
-
 from checker_exceptions import (
     CheckerError,
     TypeCheckerError,
@@ -57,15 +55,11 @@ def _is_optional(data):
 def _format_data(data):
     if callable(data):
         return data.__name__
-    if data is None:
-        return data
-    if type(data) is str:
-        return json.dumps(data)
-    return str(data)
+    return repr(data)
 
 
 def _format_error_message(expected_data, current_data):
-    return 'current value {} is not {}'.format(
+    return u'current value {} is not {}'.format(
         _format_data(current_data),
         _format_data(expected_data)
     )
@@ -80,7 +74,7 @@ class BaseChecker(object):
 
     def _format_errors(self):
         if self.errors:
-            return '\n'.join(self.errors)
+            return u'\n'.join(self.errors)
 
 
 class ListChecker(BaseChecker):
@@ -102,7 +96,7 @@ class ListChecker(BaseChecker):
                 try:
                     result = checker.validate(data)
                 except TypeCheckerError as e:
-                    result = e.__str__().replace('\n', '')
+                    result = e.__str__().replace(u'\n', u'')
                 self._append_errors_or_raise(result)
         return self._format_errors()
 
@@ -128,14 +122,14 @@ class DictChecker(BaseChecker):
         super(DictChecker, self).__init__(data, soft)
 
     def _check_dicts(self, current_dict):
-        assert current_dict, 'Wrong current dict is None'
-        assert self.expected_data, 'Wrong expected dict is None'
-        assert isinstance(current_dict, dict), 'Current data is not dict'
+        assert current_dict, u'Wrong current dict is None'
+        assert self.expected_data, u'Wrong expected dict is None'
+        assert isinstance(current_dict, dict), u'Current data is not dict'
 
     def _append_errors_or_raise(self, key, result):
-        error_message = 'From key="{}":\n{}'
+        error_message = u'From key="{}":\n{}'
         if result and isinstance(result, list):
-            result = '\n\t'.join(result)
+            result = u'\n\t'.join(result)
         if result and self.soft:
             self.errors.append(error_message.format(key, result))
         elif result and not self.soft:
@@ -154,12 +148,12 @@ class DictChecker(BaseChecker):
             try:
                 result = checker.validate(current_value)
             except TypeCheckerError as e:
-                result = e.__str__().replace('\n', '')
+                result = e.__str__().replace(u'\n', u'')
             validated_keys.append(ex_key)
             self._append_errors_or_raise(key, result)
         if not self.ignore:
             miss_keys = set(data.keys()) ^ set(validated_keys)
-            message = 'Missing keys: {}'.format(', '.join(miss_keys))
+            message = u'Missing keys: {}'.format(u', '.join(miss_keys))
             if miss_keys and self.soft:
                 self.errors.append(message)
             elif miss_keys and not self.soft:
@@ -189,9 +183,9 @@ class Or(object):
 
     def _format_errors(self, errors):
         if len(errors) == len(self.expected_data):
-            return 'Not valid data Or{}\n\t{}'.format(
+            return u'Not valid data Or{}\n\t{}'.format(
                 self._format_data(),
-                '\n\t'.join(errors)
+                u'\n\t'.join(errors)
             )
 
     def _get_need_dict(self, data):
@@ -216,7 +210,7 @@ class Or(object):
         errors = []
         if _is_dict(current_data):
             need_data = self._get_need_dict(current_data)
-            assert need_data, 'Wrong data'
+            assert need_data, u'Wrong data'
             validator = Validator(need_data, soft=True)
             return validator.validate(current_data)
         for checker in [Validator(d, soft=True) for d in self.expected_data]:
@@ -238,7 +232,7 @@ class And(Or):
     """
     def _format_errors(self, errors):
         if errors:
-            return 'Not valid data And{}'.format(self._format_data())
+            return u'Not valid data And{}'.format(self._format_data())
 
 
 class OptionalKey(object):
@@ -267,7 +261,7 @@ class Validator(object):
 
     def validate(self, data):
         if _is_iter(self.expected_data):
-            assert data and _is_iter(data), 'Wrong current data'
+            assert data and _is_iter(data), u'Wrong current data'
             list_checker = ListChecker(self.expected_data, self.soft)
             return list_checker.validate(data)
         elif _is_dict(self.expected_data):
@@ -289,13 +283,13 @@ class Validator(object):
                 return result
         elif _is_func(self.expected_data):
             func = self.expected_data
-            error_message = 'Function error {}'
+            error_message = u'Function error {}'
             try:
                 if not func(data):
                     return error_message.format(_format_data(func))
             except TypeError as e:
                 return error_message.format(
-                    _format_data(func) + ' ' + e.__str__()
+                    _format_data(func) + u' {}'.format(e.__str__())
                 )
         elif self.expected_data is None:
             if self.expected_data != data:
