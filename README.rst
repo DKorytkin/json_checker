@@ -13,6 +13,7 @@ Checker has a parameter (soft=True) that allows you validate all json and
 raise all errors after validation done, it`s very profitable from API testing:
 
 .. code:: python
+
     >>> import requests
     >>>
     >>> from checker import Checker
