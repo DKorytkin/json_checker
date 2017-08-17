@@ -10,7 +10,7 @@ from checker_exceptions import (
 )
 
 
-__version__ = '1.0'
+__version__ = '1.0.1'
 __all__ = [
     'Checker',
     'And',
@@ -20,6 +20,7 @@ __all__ = [
     'TypeCheckerError',
     'ListCheckerError',
     'DictCheckerError',
+    'MissKeyCheckerError'
 ]
 
 
@@ -288,11 +289,12 @@ class Validator(object):
                 return result
         elif _is_func(self.expected_data):
             func = self.expected_data
+            error_message = 'Function error {}'
             try:
                 if not func(data):
-                    return 'Function error {}'.format(_format_data(func))
+                    return error_message.format(_format_data(func))
             except TypeError as e:
-                return 'Function error {}'.format(
+                return error_message.format(
                     _format_data(func) + ' ' + e.__str__()
                 )
         elif self.expected_data is None:

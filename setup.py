@@ -11,7 +11,7 @@ setup(
     author='Denis Korytkin',
     author_email='dkorytkin@gmail.com',
     description='Simple data validation library',
-    keywords='Json checker from auto tests',
+    keywords='Json checker from auto tests api',
     url='https://github.com/DKorytkin/Checker',
     py_modules=['checker', 'checker_exceptions'],
     python_requires='>=2.7',
