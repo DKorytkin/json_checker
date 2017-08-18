@@ -23,9 +23,6 @@ __all__ = [
 
 
 SUPPORT_ITER_OBJECTS = (list, tuple, set, frozenset)
-NOT_SUPPORTED_ITER_OBJECT_MESSAGE = 'Current data is not {}'.format(
-    SUPPORT_ITER_OBJECTS
-)
 
 
 def _is_iter(data):
@@ -89,10 +86,15 @@ class ListChecker(BaseChecker):
             raise ListCheckerError(result)
 
     def validate(self, current_data):
+        if self.expected_data == current_data:
+            return
         for checker in [Validator(d, self.soft) for d in self.expected_data]:
             # TODO fixed [1,2,3, [4,5,6, [7,8] ,10, 11]] may be try, final
             # TODO validate position on list [int, str, bool]
-            assert _is_iter(current_data), NOT_SUPPORTED_ITER_OBJECT_MESSAGE
+            if not current_data:
+                self._append_errors_or_raise(
+                    _format_error_message(self.expected_data, current_data)
+                )
             for data in current_data:
                 try:
                     result = checker.validate(data)
@@ -270,7 +272,8 @@ class Validator(object):
 
     def validate(self, data):
         if _is_iter(self.expected_data):
-            assert data and _is_iter(data), u'Wrong current data'
+            error = u'Current data is not {}'.format(SUPPORT_ITER_OBJECTS)
+            assert _is_iter(data), error
             list_checker = ListChecker(self.expected_data, self.soft)
             return list_checker.validate(data)
         elif _is_dict(self.expected_data):
