@@ -91,6 +91,7 @@ class ListChecker(BaseChecker):
     def validate(self, current_data):
         for checker in [Validator(d, self.soft) for d in self.expected_data]:
             # TODO fixed [1,2,3, [4,5,6, [7,8] ,10, 11]] may be try, final
+            # TODO validate position on list [int, str, bool]
             assert _is_iter(current_data), NOT_SUPPORTED_ITER_OBJECT_MESSAGE
             for data in current_data:
                 try:
@@ -127,7 +128,7 @@ class DictChecker(BaseChecker):
         assert isinstance(current_dict, dict), u'Current data is not dict'
 
     def _append_errors_or_raise(self, key, result):
-        error_message = u'From key="{}":\n{}'
+        error_message = u'From key="{}": {}'
         if result and isinstance(result, list):
             result = u'\n\t'.join(result)
         if result and self.soft:
@@ -181,12 +182,16 @@ class Or(object):
     def _format_data(self):
         return tuple(_format_data(d) for d in self.expected_data)
 
+    def _error_message(self, errors):
+        return u'Not valid data {}{}\n{}'.format(
+            self.__class__.__name__,
+            self._format_data(),
+            u'\n\t'.join(errors)
+        )
+
     def _format_errors(self, errors):
         if len(errors) == len(self.expected_data):
-            return u'Not valid data Or{}\n\t{}'.format(
-                self._format_data(),
-                u'\n\t'.join(errors)
-            )
+            return self._error_message(errors)
 
     def _get_need_dict(self, data):
         """
@@ -212,7 +217,9 @@ class Or(object):
             need_data = self._get_need_dict(current_data)
             assert need_data, u'Wrong data'
             validator = Validator(need_data, soft=True)
-            return validator.validate(current_data)
+            result = validator.validate(current_data)
+            if result:
+                return self._error_message([result])
         for checker in [Validator(d, soft=True) for d in self.expected_data]:
             try:
                 result = checker.validate(current_data)
@@ -230,9 +237,10 @@ class And(Or):
     And(int, lambda x: 0 < x < 99)
     current data mast be checked, all conditions returned True
     """
+
     def _format_errors(self, errors):
         if errors:
-            return u'Not valid data And{}'.format(self._format_data())
+            return self._error_message(errors)
 
 
 class OptionalKey(object):
@@ -242,14 +250,12 @@ class OptionalKey(object):
     {'key1': 1, OptionalKey('key2'):2}
     if current data have key 'key2' mast be checked else pass
     """
+
     def __init__(self, data):
         self.expected_data = data
 
     def __repr__(self):
-        return u'{class_name}({data})'.format(
-            class_name=self.__class__.__name__,
-            data=self.expected_data
-        )
+        return u'OptionalKey({})'.format(self.expected_data)
 
 
 class Validator(object):
@@ -258,6 +264,9 @@ class Validator(object):
         self.expected_data = expected_data
         self.soft = soft
         self.ignore_extra_keys = ignore_extra_keys
+
+    def __repr__(self):
+        return u'Validator({})'.format(self.expected_data)
 
     def validate(self, data):
         if _is_iter(self.expected_data):

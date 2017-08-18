@@ -93,8 +93,6 @@ VALIDATOR_DATA_POSITIVE = [
     [Or(int, None), False, 12, None],
     [Or(int, None), False, None, None],
     [Or(str, lambda x: isinstance(type(x), type)), False, 12, None],
-    [Or({'key1': int}, {'key2': str}), False, {'key2': 12},
-     'From key="key2":\ncurrent value 12 is not str'],
     [{OptionalKey('key'): 'value'}, False, {'key': 'value'}, None],
     [None, True, None, None],
     [None, True, 12, 'current value 12 is not None'],
@@ -202,6 +200,16 @@ def test_validator_positive(data):
     validator_data, soft, current_data, expected_result = data
     validator = Validator(validator_data, soft=soft, ignore_extra_keys=False)
     assert validator.validate(current_data) == expected_result
+
+
+def test_validator_some_dicts():
+    result = Validator(
+        expected_data=Or({'key1': int}, {'key2': str}),
+        soft=False,
+        ignore_extra_keys=False
+    ).validate({'key2': 12})
+    assert 'Not valid data Or' in result
+    assert 'From key="key2": current value 12 is not str' in result
 
 
 @pytest.mark.parametrize('data', VALIDATOR_DATA_POSITIVE_MESSAGE)
