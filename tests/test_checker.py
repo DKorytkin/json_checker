@@ -27,6 +27,8 @@ CHECKER_DATA_POSITIVE = [
     [[int], [1]],
     [[int], [1, 2, 3]],
     [[int], list(range(1000))],
+    [[int], [int]],
+    [[1, 2, 3], [1, 2, 3]],
     [[str], ['1'] * 1000],
     [[bool], [True, False]],
     [[{'key1': int}], [{'key1': 1}, {'key1': 1}, {'key1': 1}]],
@@ -58,6 +60,7 @@ CHECKER_DATA_NEGATIVE = [
     [frozenset, 'test'],
     [set, []],
     [[int], ['test']],
+    [[int], []],
     [[bool], [1, 2, 3]],
     [[str], list(range(1000))],
     [[int], ['1'] * 1000],
@@ -78,7 +81,6 @@ CHECKER_DATA_NEGATIVE = [
     [{'key1': And(str, lambda x: x in ('t', 'e', 's', 't'))}, {'key1': '1'}],
 ]
 CHECKER_DATA_ASSERT = [
-    [[int], []],
     [[int], 122],
     [{'test': bool}, {}],
     [{'test': bool}, []],

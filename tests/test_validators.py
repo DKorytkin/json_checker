@@ -39,7 +39,6 @@ TYPE_DATA_NEGATIVE = [
 LIST_DATA_POSITIVE = [
     [[int], False, [1, 2, 3]],
     [[int], True, [1, 2, 3]],
-    [[int], False, []],
     [[int], False, [True]]
 ]
 LIST_DATA_POSITIVE_MESSAGE = [
@@ -50,6 +49,7 @@ LIST_DATA_NEGATIVE = [
     [[int], [1, '2', '3']],
     [[int], [1, 2, None]],
     [[bool], [1, 2]],
+    [[int], []],
     [[str], [1, '2', '3']],
 
 ]
