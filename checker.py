@@ -153,7 +153,6 @@ class DictChecker(BaseChecker):
         self._check_dicts(data)
         validated_keys = []
         for key, value in self.expected_data.items():
-            # TODO add validate key instance or equals
             if _is_optional(key) and key.expected_data not in data.keys():
                 continue
             ex_key = key if not _is_optional(key) else key.expected_data

@@ -21,7 +21,6 @@ TYPE_DATA_POSITIVE = [
     [int, True, 123, None],
     [int, False, 123, None],
     [int, False, True, None],
-    # [len, False, [1, 2], None],  # TODO unskip after fix
     [bool, False, True, None],
     [str, False, "1", None],
     [int, True, '123', "current value '123' is not int"],
