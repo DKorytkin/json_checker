@@ -8,7 +8,7 @@ from checker_exceptions import (
 )
 
 
-__version__ = '1.0.3'
+__version__ = '1.0.5'
 __all__ = [
     'Checker',
     'And',
@@ -86,15 +86,26 @@ class ListChecker(BaseChecker):
             raise ListCheckerError(result)
 
     def validate(self, current_data):
+        if not current_data:
+            error = _format_error_message(self.expected_data, current_data)
+            self._append_errors_or_raise(error)
+            return self._format_errors()
+        if not _is_iter(current_data):
+            error = u'Current data is not {}'.format(SUPPORT_ITER_OBJECTS)
+            self._append_errors_or_raise(error)
+            return self._format_errors()
         if self.expected_data == current_data:
             return
+        if len(self.expected_data) == len(current_data):
+            for ex, cu in list(zip(self.expected_data, current_data)):
+                checker = Validator(ex, self.soft)
+                try:
+                    result = checker.validate(cu)
+                except TypeCheckerError as e:
+                    result = e.__str__().replace(u'\n', u'')
+                self._append_errors_or_raise(result)
+            return self._format_errors()
         for checker in [Validator(d, self.soft) for d in self.expected_data]:
-            # TODO fixed [1,2,3, [4,5,6, [7,8] ,10, 11]] may be try, final
-            # TODO validate position on list [int, str, bool]
-            if not current_data:
-                self._append_errors_or_raise(
-                    _format_error_message(self.expected_data, current_data)
-                )
             for data in current_data:
                 try:
                     result = checker.validate(data)
@@ -272,8 +283,6 @@ class Validator(object):
 
     def validate(self, data):
         if _is_iter(self.expected_data):
-            error = u'Current data is not {}'.format(SUPPORT_ITER_OBJECTS)
-            assert _is_iter(data), error
             list_checker = ListChecker(self.expected_data, self.soft)
             return list_checker.validate(data)
         elif _is_dict(self.expected_data):
