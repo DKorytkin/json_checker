@@ -30,7 +30,7 @@ Installation
 
 .. code-block:: sh
 
-    $ pip install Checker
+    $ pip install json_checker
 
 
 Example
