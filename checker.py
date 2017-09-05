@@ -86,16 +86,16 @@ class ListChecker(BaseChecker):
             raise ListCheckerError(result)
 
     def validate(self, current_data):
-        if not current_data:
-            error = _format_error_message(self.expected_data, current_data)
-            self._append_errors_or_raise(error)
-            return self._format_errors()
         if not _is_iter(current_data):
             error = u'Current data is not {}'.format(SUPPORT_ITER_OBJECTS)
             self._append_errors_or_raise(error)
             return self._format_errors()
         if self.expected_data == current_data:
             return
+        if not current_data:
+            error = _format_error_message(self.expected_data, current_data)
+            self._append_errors_or_raise(error)
+            return self._format_errors()
         if len(self.expected_data) == len(current_data):
             for ex, cu in list(zip(self.expected_data, current_data)):
                 checker = Validator(ex, self.soft)
