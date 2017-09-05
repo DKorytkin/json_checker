@@ -12,7 +12,7 @@ setup(
     author_email='dkorytkin@gmail.com',
     description='Simple data validation library',
     keywords='Json checker from auto tests api',
-    url='https://github.com/DKorytkin/JsonChecker',
+    url='https://github.com/DKorytkin/json_checker',
     py_modules=['checker', 'checker_exceptions'],
     python_requires='>=2.7',
     long_description=codecs.open('README.rst', 'r', 'utf-8').read(),

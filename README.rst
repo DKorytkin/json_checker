@@ -1,15 +1,15 @@
-Checker
+json_checker
 ===============================================================================
 
-.. image:: https://travis-ci.org/DKorytkin/Checker.svg?branch=master 
-    :target: https://travis-ci.org/DKorytkin/Checker
+.. image:: https://travis-ci.org/DKorytkin/json_checker.svg?branch=master
+    :target: https://travis-ci.org/DKorytkin/json_checker
 
 .. image:: https://codecov.io/gh/DKorytkin/Checker/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/DKorytkin/Checker
 
-**Checker** is a library for validating Python data structures,
+**json_checker** is a library for validating Python data structures,
 such as those obtained from JSON (or something else) to Python data-types.
-Checker has a parameter (soft=True) that allows you validate all json and
+json_checker has a parameter (soft=True) that allows you validate all json and
 raise all errors after validation done, it`s very profitable from API testing:
 
 .. code:: python
@@ -59,7 +59,7 @@ If data is valid, ``Checker.validate`` will return the validated data
 If data is invalid, ``Checker`` will raise ``CheckerError``.
 
 
-How ``Checker`` validates data
+How ``json_checker`` validates data
 -------------------------------------------------------------------------------
 
 Types
