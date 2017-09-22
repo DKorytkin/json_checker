@@ -27,33 +27,6 @@ raise all errors after validation done, it`s very profitable from API testing:
     >>>     assert Checker(EXPECTED_RESPONSE, soft=True).validate(res) == res
 
 
-
-
-
-    >>> import requests
-    >>>
-    >>> from json_checker import Checker
-    >>>
-    >>>
-    >>> def test_api():
-    >>>     res = requests.get(API_URL).json()
-    >>>     assert Checker(EXPECTED_RESPONSE, soft=True).validate(res) == res
-
-
-
-
-
-    >>> import requests
-    >>>
-    >>> from json_checker import Checker
-    >>>
-    >>>
-    >>> def test_api():
-    >>>     res = requests.get(API_URL).json()
-    >>>     assert Checker(EXPECTED_RESPONSE, soft=True).validate(res) == res
-
-
-
 Installation
 -------------------------------------------------------------------------------
 
@@ -76,38 +49,8 @@ validating a list of entries with personal information:
     >>> expected_data = {'first_key': int, 'second_key': str}
 
 
-    >>> json_checker = Checker(expected_data)
-    >>> result = json_checker.validate(current_data)
-
-
-    >>> assert result == current_data
-
-
-If data is valid,
-
-    >>> from json_checker import Checker
-
-    >>> current_data = {'first_key': 1, 'second_key': '2'}
-    >>> expected_data = {'first_key': int, 'second_key': str}
-
-
-    >>> json_checker = Checker(expected_data)
-    >>> result = json_checker.validate(current_data)
-
-
-    >>> assert result == current_data
-
-
-If data is valid,
-
-    >>> from json_checker import Checker
-
-    >>> current_data = {'first_key': 1, 'second_key': '2'}
-    >>> expected_data = {'first_key': int, 'second_key': str}
-
-
-    >>> json_checker = Checker(expected_data)
-    >>> result = json_checker.validate(current_data)
+    >>> checker = Checker(expected_data)
+    >>> result = checker.validate(current_data)
 
 
     >>> assert result == current_data
@@ -129,34 +72,6 @@ it will check if the corresponding piece of data is an instance of that type,
 otherwise it will raise ``CheckerError``.
 
 .. code:: python
-
-    >>> from json_checker import Checker
-
-    >>> Checker(int).validate(123)
-    123
-
-    >>> Checker(int).validate('123')
-    Traceback (most recent call last):
-    ...
-    checker_exceptions.TypeCheckerError:
-    current value "123" is not int
-
-
-
-
-    >>> from json_checker import Checker
-
-    >>> Checker(int).validate(123)
-    123
-
-    >>> Checker(int).validate('123')
-    Traceback (most recent call last):
-    ...
-    checker_exceptions.TypeCheckerError:
-    current value "123" is not int
-
-
-
 
     >>> from json_checker import Checker
 
@@ -208,14 +123,14 @@ key-value pairs:
 .. code:: python
 
     >>> current_dict = {'first_key': 1, 'second_key': '2'}
-    >>> json_checker = Checker({'first_key': int, 'second_key': int})
-    >>> json_checker.validate(current_dict)
+    >>> checker = Checker({'first_key': int, 'second_key': int})
+    >>> checker.validate(current_dict)
 
     Traceback (most recent call last):
     ...
     checker_exceptions.DictCheckerError:
     From key="second_key"
-        current value 2 is not int
+        current value "2" is not int
 
 
 Operators Or, And, OptionalKey
@@ -229,49 +144,11 @@ try it:
 
     >>> from json_checker import Checker, And
 
-    >>> c = Checker(And(int, lambda x: 0 < x < 99))
-    >>> c.validate(12)
+    >>> checker = Checker(And(int, lambda x: 0 < x < 99))
+    >>> checker.validate(12)
     12
 
-    >>> c.validate(100)
-    Traceback (most recent call last):
-    ...
-    checker_exceptions.CheckerError:
-        Not valid data And('int', '<lambda>')
-
-
-If you need validation not required data value, use Or operator
-for example current data must be int or None
-try it:
-
-
-
-    >>> from json_checker import Checker, And
-
-    >>> c = Checker(And(int, lambda x: 0 < x < 99))
-    >>> c.validate(12)
-    12
-
-    >>> c.validate(100)
-    Traceback (most recent call last):
-    ...
-    checker_exceptions.CheckerError:
-        Not valid data And('int', '<lambda>')
-
-
-If you need validation not required data value, use Or operator
-for example current data must be int or None
-try it:
-
-
-
-    >>> from json_checker import Checker, And
-
-    >>> c = Checker(And(int, lambda x: 0 < x < 99))
-    >>> c.validate(12)
-    12
-
-    >>> c.validate(100)
+    >>> checker.validate(100)
     Traceback (most recent call last):
     ...
     checker_exceptions.CheckerError:
@@ -286,56 +163,17 @@ try it:
 
     >>> from json_checker import Checker, Or
 
-    >>> c = Checker(Or(int, None))
-    >>> c.validate(122)
+    >>> checker = Checker(Or(int, None))
+    >>> checker.validate(122)
     122
 
-    >>> c.validate('666')
+    >>> checker.validate('666')
     Traceback (most recent call last):
     ...
     checker_exceptions.CheckerError:
     Not valid data Or('int', None)
         current value "122" is not int
         current value "122" is not None
-
-
-If you need validate no required dict key, use OptionalKey
-
-
-
-    >>> from json_checker import Checker, Or
-
-    >>> c = Checker(Or(int, None))
-    >>> c.validate(122)
-    122
-
-    >>> c.validate('666')
-    Traceback (most recent call last):
-    ...
-    checker_exceptions.CheckerError:
-    Not valid data Or('int', None)
-        current value "122" is not int
-        current value "122" is not None
-
-
-If you need validate no required dict key, use OptionalKey
-
-
-
-    >>> from json_checker import Checker, Or
-
-    >>> c = Checker(Or(int, None))
-    >>> c.validate(122)
-    122
-
-    >>> c.validate('666')
-    Traceback (most recent call last):
-    ...
-    checker_exceptions.CheckerError:
-    Not valid data Or('int', None)
-        current value "122" is not int
-        current value "122" is not None
-
 
 If you need validate no required dict key, use OptionalKey
 
@@ -355,29 +193,3 @@ If you need validate no required dict key, use OptionalKey
         current value "value2" is not int
 
 
-    >>> from json_checker import Checker, OptionalKey
-
-    >>> expected_dict = {'key1': str, OptionalKey('key2'): int}
-    >>> Checker(expected_dict).validate({'key1': 'value'})
-    {'key1': 'value'}
-
-    >>> Checker(expected_dict).validate({'key1': 'value', 'key2': 'value2'})
-    Traceback (most recent call last):
-    ...
-    checker_exceptions.DictCheckerError:
-    From key="OptionalKey(key2)"
-        current value "value2" is not int
-
-
-    >>> from json_checker import Checker, OptionalKey
-
-    >>> expected_dict = {'key1': str, OptionalKey('key2'): int}
-    >>> Checker(expected_dict).validate({'key1': 'value'})
-    {'key1': 'value'}
-
-    >>> Checker(expected_dict).validate({'key1': 'value', 'key2': 'value2'})
-    Traceback (most recent call last):
-    ...
-    checker_exceptions.DictCheckerError:
-    From key="OptionalKey(key2)"
-        current value "value2" is not int
