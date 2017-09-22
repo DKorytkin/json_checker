@@ -1,7 +1,7 @@
 
 import pytest
 
-from checker import (
+from json_checker import (
     ListChecker,
     TypeChecker,
     DictChecker,

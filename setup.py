@@ -2,12 +2,12 @@
 import codecs
 from setuptools import setup
 
-import checker
+import json_checker
 
 
 setup(
     name="json_checker",
-    version=checker.__version__,
+    version=json_checker.__version__,
     author='Denis Korytkin',
     author_email='dkorytkin@gmail.com',
     description='Simple data validation library',

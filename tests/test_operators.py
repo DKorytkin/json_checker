@@ -1,7 +1,7 @@
 
 import pytest
 
-from checker import Checker, And, Or, OptionalKey
+from json_checker import Checker, And, Or, OptionalKey
 
 
 OR_DATA = [

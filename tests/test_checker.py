@@ -1,7 +1,7 @@
 
 import pytest
 
-from checker import Checker, And, Or, OptionalKey, SUPPORT_ITER_OBJECTS
+from json_checker import Checker, And, Or, OptionalKey, SUPPORT_ITER_OBJECTS
 from checker_exceptions import (
     CheckerError,
     TypeCheckerError,
