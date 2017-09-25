@@ -8,7 +8,7 @@ from checker_exceptions import (
 )
 
 
-__version__ = '1.0.6'
+__version__ = '1.1.0'
 __all__ = [
     'Checker',
     'And',
@@ -135,27 +135,29 @@ class DictChecker(BaseChecker):
         self.ignore = ignore
         super(DictChecker, self).__init__(data, soft)
 
-    def _check_dicts(self, current_dict):
-        assert current_dict, u'Wrong current dict is None'
-        assert self.expected_data, u'Wrong expected dict is None'
-        assert isinstance(current_dict, dict), u'Current data is not dict'
-
-    def _append_errors_or_raise(self, key, result):
+    def _append_errors_or_raise(self, key, result, exception):
         error_message = u'From key="{}": {}'
         if result and isinstance(result, list):
             result = u'\n\t'.join(result)
         if result and self.soft:
             self.errors.append(error_message.format(key, result))
         elif result and not self.soft:
-            raise DictCheckerError(error_message.format(key, result))
+            raise exception(error_message.format(key, result))
 
     def validate(self, data):
-        self._check_dicts(data)
+        if data == self.expected_data:
+            return
+        assert isinstance(data, dict), u'Current data is not dict'
         validated_keys = []
+        current_keys = list(data.keys())
         for key, value in self.expected_data.items():
-            if _is_optional(key) and key.expected_data not in data.keys():
+            if _is_optional(key) and key.expected_data not in current_keys:
                 continue
             ex_key = key if not _is_optional(key) else key.expected_data
+            if ex_key not in current_keys:
+                message = u'Missing key'
+                self._append_errors_or_raise(key, message, MissKeyCheckerError)
+                continue
             current_value = data.get(ex_key)
             checker = Validator(value, self.soft, self.ignore)
             try:
@@ -163,9 +165,9 @@ class DictChecker(BaseChecker):
             except TypeCheckerError as e:
                 result = e.__str__().replace(u'\n', u'')
             validated_keys.append(ex_key)
-            self._append_errors_or_raise(key, result)
+            self._append_errors_or_raise(key, result, DictCheckerError)
         if not self.ignore:
-            miss_keys = set(data.keys()) ^ set(validated_keys)
+            miss_keys = set(current_keys) ^ set(validated_keys)
             message = u'Missing keys: {}'.format(u', '.join(miss_keys))
             if miss_keys and self.soft:
                 self.errors.append(message)
@@ -227,7 +229,6 @@ class Or(object):
         errors = []
         if _is_dict(current_data):
             need_data = self._get_need_dict(current_data)
-            assert need_data, u'Wrong data'
             validator = Validator(need_data, soft=True)
             result = validator.validate(current_data)
             if result:
