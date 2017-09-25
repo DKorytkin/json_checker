@@ -13,7 +13,8 @@ from json_checker import (
 from checker_exceptions import (
     TypeCheckerError,
     ListCheckerError,
-    DictCheckerError
+    DictCheckerError,
+    MissKeyCheckerError
 )
 
 
@@ -75,11 +76,8 @@ DICT_DATA_NEGATIVE = [
     [{'test': bool}, {'test': 666}],
 ]
 DICT_DATA_ASSERT = [
-    [{'test': bool}, {}],
     [{'test': bool}, []],
     [{'test': bool}, 'test'],
-    [{}, {'test': 'test'}],
-    [{'test': {'test': bool}}, {'test': {}}],
     [{'test': {'test': bool}}, {'test': 'test'}],
 ]
 VALIDATOR_DATA_POSITIVE = [
@@ -132,6 +130,11 @@ VALIDATOR_DATA_POSITIVE_MESSAGE = [
 ]
 VALIDATOR_DATA_ASSERT = [
     [[int], False, [], []],
+]
+VALIDATOR_DATA_MISS_KEY = [
+    [{'test': bool}, {}],
+    [{'test': {'test': bool}}, {'test': {}}],
+    [{}, {'test': 'test'}],
 ]
 
 
@@ -216,3 +219,9 @@ def test_validator_positive_message(data):
     validator_data, current_data, expected_result = data
     validator = Validator(validator_data, soft=True, ignore_extra_keys=False)
     assert expected_result in validator.validate(current_data)
+
+
+@pytest.mark.parametrize(('ex_data', 'cu_data'), VALIDATOR_DATA_MISS_KEY)
+def test_validator_miss_key(ex_data, cu_data):
+    with pytest.raises(MissKeyCheckerError):
+        DictChecker(ex_data, soft=False, ignore=False).validate(cu_data)

@@ -86,12 +86,16 @@ CHECKER_DATA_NEGATIVE = [
     [{'key1': And(str, lambda x: x in ('t', 'e', 's', 't'))}, {'key1': '1'}],
 ]
 CHECKER_DATA_ASSERT = [
-    [{'test': bool}, {}],
     [{'test': bool}, []],
     [{'test': bool}, 'test'],
+    [{'test': {'test': bool}}, {'test': 'test'}],
+]
+CHECKER_DATA_MISS_KEY = [
+    [{'test': bool}, {}],
+    [{'key1': bool, 'key2': int}, {}],
     [{}, {'test': 'test'}],
     [{'test': {'test': bool}}, {'test': {}}],
-    [{'test': {'test': bool}}, {'test': 'test'}],
+    [{'k1': int}, {'k1': 12, 'k2': 'test'}]
 ]
 CHECKER_CLASS_DATA = [
     [Checker, 1, '1'],
@@ -152,6 +156,13 @@ def test_repr_checker_class(data):
     assert c.__str__() == expected_result
 
 
-def test_miss_keys():
+@pytest.mark.parametrize(('expected', 'current'), CHECKER_DATA_MISS_KEY)
+def test_miss_keys(expected, current):
     with pytest.raises(MissKeyCheckerError):
-        Checker({'k1': int}).validate({'k1': 12, 'k2': 'test'})
+        Checker(expected).validate(current)
+
+
+@pytest.mark.parametrize(('expected', 'current'), CHECKER_DATA_MISS_KEY)
+def test_miss_keys_soft(expected, current):
+    with pytest.raises(CheckerError):
+        Checker(expected, soft=True).validate(current)

@@ -19,6 +19,7 @@ AND_DATA_MESSAGE = [
 ]
 OPTIONAL_DATA = [
     [{OptionalKey('key'): 'value'}, {'key': 'value'}, {'key': 'value'}],
+    [{OptionalKey('key'): 'value'}, {}, {}],
     [
         {OptionalKey('key'): 'value', 'key2': 'value2'},
         {'key2': 'value2'},
@@ -69,11 +70,6 @@ def test_operator_and(data):
 def test_operator_optional_key(data):
     optional_data, current_data, expected_result = data
     assert Checker(optional_data).validate(current_data) == expected_result
-
-
-def test_operator_optional_key_assert():
-    with pytest.raises(AssertionError):
-        Checker({OptionalKey('key'): 'value'}).validate({})
 
 
 @pytest.mark.parametrize('data', OPERATOR_CLASS_DATA)
