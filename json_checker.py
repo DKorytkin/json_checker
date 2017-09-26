@@ -10,7 +10,7 @@ from checker_exceptions import (
 )
 
 
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 __all__ = [
     'Checker',
     'And',
@@ -96,7 +96,10 @@ class ListChecker(BaseChecker):
     def validate(self, current_data):
         log.info(u'Run list validation {}'.format(current_data))
         if not _is_iter(current_data):
-            error = u'Current data is not {}'.format(SUPPORT_ITER_OBJECTS)
+            error = u'Current data {} is not {}'.format(
+                current_data,
+                SUPPORT_ITER_OBJECTS
+            )
             self._append_errors_or_raise(error)
             return self._format_errors()
         if self.expected_data == current_data:
@@ -231,20 +234,29 @@ class Or(object):
         """
         dicts = {}
         current_keys = set(data.keys())
+        class_name = self.__class__.__name__
         for d in self.expected_data:
             if not _is_dict(d):
                 continue
+            keys = d.keys()
+            if keys == data.keys():
+                log.warning(u'{} selected equals dict={}'.format(class_name, d))
+                return d
             ex_keys = set()
-            for k in d.keys():
-                if _is_optional(k) and k.expected_data not in data.keys():
+            active_optional_count = 0
+            for k in keys:
+                if _is_optional(k) and k.expected_data not in current_keys:
+                    log.warning(u'Skip {}'.format(k))
                     continue
+                if _is_optional(k):
+                    active_optional_count += 1
+                    k = k.expected_data
                 ex_keys.add(k)
-            dicts[len(ex_keys ^ current_keys)] = d
-        need_dict = dicts.get(min(dicts.keys()))
-        log.warning(u'{} selected dict={}'.format(
-            self.__class__.__name__,
-            need_dict
-        ))
+            intersection_count = len(ex_keys.intersection(current_keys))
+            dicts[intersection_count + active_optional_count] = d
+        log.warning(u'Have choice: {}'.format(dicts))
+        need_dict = dicts.get(max(dicts.keys()))
+        log.warning(u'{} selected dict={}'.format(class_name, need_dict))
         return need_dict
 
     def validate(self, current_data):
