@@ -13,7 +13,7 @@ setup(
     description='Simple data validation library',
     keywords='Json checker from auto tests api',
     url='https://github.com/DKorytkin/json_checker',
-    py_modules=['checker', 'checker_exceptions'],
+    py_modules=['json_checker', 'checker_exceptions'],
     python_requires='>=2.7',
     long_description=codecs.open('README.rst', 'r', 'utf-8').read(),
     classifiers=[
