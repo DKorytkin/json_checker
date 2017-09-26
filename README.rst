@@ -10,6 +10,9 @@ json_checker
 .. image:: https://img.shields.io/badge/python-2.7%2C%203.3%2C%203.4%2C%203.5%2C%203.6-blue.svg
     :target: https://pypi.python.org/pypi/json_checker
 
+.. image:: https://img.shields.io/badge/version-1.1.0-lightgrey.svg
+    :target: https://github.com/DKorytkin/json_checker.__version__
+
 **json_checker** is a library for validating Python data structures,
 such as those obtained from JSON (or something else) to Python data-types.
 json_checker has a parameter (soft=True) that allows you validate all json and
