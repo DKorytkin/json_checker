@@ -32,15 +32,55 @@ OPERATOR_CLASS_DATA = [
     [OptionalKey, 'test', 'OptionalKey(test)'],
 ]
 TEST_DICT = {OptionalKey('key2'): str, 'test': int}
+TEST_OPTION_DICT = {
+    'key1': int,
+    OptionalKey('key2'): str,
+    OptionalKey('key3'): bool
+}
+TEST_LARGE_DICT = {
+    OptionalKey('key1'): str,
+    'key2': bool,
+    OptionalKey('key3'): str,
+    'key4': bool,
+    'key5': str,
+    OptionalKey('key6'): str,
+    OptionalKey('key7'): str,
+    OptionalKey('key8'): str,
+    OptionalKey('key9'): bool,
+    OptionalKey('key10'): Or([str], [])
+}
 OPERATOR_OR_DICT_DATA = [
     [({'key1': 1}, {'key2': str}), {'key2': 'test'}, {'key2': str}],
     [({'key1': 1}, {'key2': str}), {'key1': 'test'}, {'key1': 1}],
-    [({'key1': 1, 'test': 2}, {'key2': str, 'test': 2}),
-     {'key1': 'test', 'test': 2}, {'key1': 1, 'test': 2}],
-    [({'key1': 1}, {'key2': str, 'key1': int, 'key3': bool}),
-     {'key1': 'test'}, {'key1': 1}],
     [({'key1': 1}, [str]), {'key1': 1, 'key2': 'test'}, {'key1': 1}],
     [({'key1': 1, 'test': int}, TEST_DICT), {'test': 2}, TEST_DICT],
+    [(TEST_OPTION_DICT, {'test': 1}), {'key2': 1}, TEST_OPTION_DICT],
+    [(TEST_OPTION_DICT, {'test': 1}), {}, {'test': 1}],
+    [(TEST_OPTION_DICT, {'test': 1}), {'test': 2}, {'test': 1}],
+    [(TEST_OPTION_DICT, {}), {}, {}],
+    [
+        (TEST_LARGE_DICT, {}),
+        {
+            'key10': [],
+            'key8': 'test text',
+            'key9': False,
+            'key6': '11.07.2014',
+            'key4': True,
+            'key3': 'by_dates',
+            'key1': '18.07.2014'
+        },
+        TEST_LARGE_DICT
+    ],
+    [
+        ({'key1': 1, 'test': 2}, {'key2': str, 'test': 2}),
+        {'key1': 'test', 'test': 2},
+        {'key1': 1, 'test': 2}
+    ],
+    [
+        ({'key1': 1}, {'key2': str, 'key1': int, 'key3': bool}),
+        {'key1': 'test'},
+        {'key1': 1}
+    ]
 ]
 
 

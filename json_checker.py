@@ -249,12 +249,13 @@ class Or(object):
                     log.warning(u'Skip {}'.format(k))
                     continue
                 if _is_optional(k):
+                    log.info(u'Active {}'.format(k))
                     active_optional_count += 1
                     k = k.expected_data
                 ex_keys.add(k)
             intersection_count = len(ex_keys.intersection(current_keys))
             dicts[intersection_count + active_optional_count] = d
-        log.warning(u'Have choice: {}'.format(dicts))
+        log.info(u'Have choice: {}'.format(dicts))
         need_dict = dicts.get(max(dicts.keys()))
         log.warning(u'{} selected dict={}'.format(class_name, need_dict))
         return need_dict
