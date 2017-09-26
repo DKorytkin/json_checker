@@ -263,6 +263,7 @@ class Or(object):
             result = validator.validate(current_data)
             if result:
                 return self._error_message([result])
+            return
         for checker in [Validator(d, soft=True) for d in self.expected_data]:
             try:
                 result = checker.validate(current_data)
