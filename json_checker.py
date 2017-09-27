@@ -238,13 +238,13 @@ class Or(object):
         for d in self.expected_data:
             if not _is_dict(d):
                 continue
-            keys = d.keys()
-            if keys == data.keys():
-                log.warning(u'{} selected equals dict={}'.format(class_name, d))
+            ex_dict_keys = d.keys()
+            if ex_dict_keys == data.keys():
+                log.info(u'{} selected equals dict={}'.format(class_name, d))
                 return d
             ex_keys = set()
             active_optional_count = 0
-            for k in keys:
+            for k in ex_dict_keys:
                 if _is_optional(k) and k.expected_data not in current_keys:
                     log.warning(u'Skip {}'.format(k))
                     continue
@@ -254,10 +254,11 @@ class Or(object):
                     k = k.expected_data
                 ex_keys.add(k)
             intersection_count = len(ex_keys.intersection(current_keys))
-            dicts[intersection_count + active_optional_count] = d
+            coincide_ratio = intersection_count + active_optional_count
+            dicts[coincide_ratio] = d
         log.info(u'Have choice: {}'.format(dicts))
         need_dict = dicts.get(max(dicts.keys()))
-        log.warning(u'{} selected dict={}'.format(class_name, need_dict))
+        log.info(u'{} selected dict={}'.format(class_name, need_dict))
         return need_dict
 
     def validate(self, current_data):
