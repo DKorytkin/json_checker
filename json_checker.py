@@ -96,10 +96,7 @@ class ListChecker(BaseChecker):
     def validate(self, current_data):
         log.info(u'Run list validation {}'.format(current_data))
         if not _is_iter(current_data):
-            error = u'Current data {} is not {}'.format(
-                current_data,
-                SUPPORT_ITER_OBJECTS
-            )
+            error = _format_error_message(current_data, SUPPORT_ITER_OBJECTS)
             self._append_errors_or_raise(error)
             return self._format_errors()
         if self.expected_data == current_data:
@@ -165,7 +162,7 @@ class DictChecker(BaseChecker):
         if data == self.expected_data:
             log.info(u'Validation DictChecker success')
             return
-        assert isinstance(data, dict), u'Current data is not dict'
+        assert isinstance(data, dict), _format_error_message('dict', data)
         validated_keys = []
         current_keys = list(data.keys())
         for key, value in self.expected_data.items():
