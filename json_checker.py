@@ -24,8 +24,6 @@ __all__ = [
 ]
 
 
-FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-logging.basicConfig(format=FORMAT, level='INFO')
 log = logging.getLogger(__name__)
 
 
