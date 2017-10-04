@@ -10,7 +10,7 @@ from checker_exceptions import (
 )
 
 
-__version__ = '1.1.3'
+__version__ = '1.1.4'
 __all__ = [
     'Checker',
     'And',
