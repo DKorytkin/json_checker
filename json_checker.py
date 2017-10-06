@@ -214,7 +214,7 @@ class Or(object):
         return u'Not valid data {}{}\n{}'.format(
             self.__class__.__name__,
             self._format_data(),
-            u'\n\t'.join(errors)
+            u'\n'.join(errors)
         )
 
     def _format_errors(self, errors):
@@ -266,7 +266,10 @@ class Or(object):
             self.__class__.__name__,
             self.expected_data
         ))
-        if _is_dict(current_data):
+        if (
+            _is_dict(current_data) and
+            all(_is_dict(d) for d in self.expected_data)
+        ):
             need_data = self._get_need_dict(current_data)
             validator = Validator(need_data, soft=True)
             result = validator.validate(current_data)
@@ -324,7 +327,9 @@ class Validator(object):
         return u'Validator({})'.format(self.expected_data)
 
     def validate(self, data):
-        if _is_iter(self.expected_data):
+        if self.expected_data == data:
+            return
+        elif _is_iter(self.expected_data):
             list_checker = ListChecker(self.expected_data, self.soft)
             return list_checker.validate(data)
         elif _is_dict(self.expected_data):
