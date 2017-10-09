@@ -10,7 +10,7 @@ from checker_exceptions import (
 )
 
 
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 __all__ = [
     'Checker',
     'And',
@@ -77,7 +77,7 @@ class BaseChecker(object):
     def _format_errors(self):
         if self.errors:
             return u'\n'.join(self.errors)
-        log.info(u'Validation {} success'.format(self.__class__.__name__))
+        log.debug(u'Validation {} success'.format(self.__class__.__name__))
 
 
 class ListChecker(BaseChecker):
@@ -92,7 +92,7 @@ class ListChecker(BaseChecker):
             raise ListCheckerError(result)
 
     def validate(self, current_data):
-        log.info(u'Run list validation {}'.format(current_data))
+        log.debug(u'Run list validation {}'.format(current_data))
         if not _is_iter(current_data):
             error = _format_error_message(current_data, SUPPORT_ITER_OBJECTS)
             self._append_errors_or_raise(error)
@@ -129,13 +129,13 @@ class TypeChecker(BaseChecker):
             return _format_error_message(*self.errors)
 
     def validate(self, current_data):
-        log.info(u'Run item validation {}'.format(current_data))
+        log.debug(u'Run item validation {}'.format(current_data))
         if not isinstance(current_data, self.expected_data):
             self.errors = (self.expected_data, current_data)
             if self.soft:
                 return self._format_errors()
             raise TypeCheckerError(self._format_errors())
-        log.info(u'Validation TypeChecker success')
+        log.debug(u'Validation TypeChecker success')
 
 
 class DictChecker(BaseChecker):
@@ -149,16 +149,16 @@ class DictChecker(BaseChecker):
         if result and isinstance(result, list):
             result = u'\n\t'.join(result)
         if result and self.soft:
-            log.warning(u'Have error key={} result={}'.format(key, result))
+            log.debug(u'Have error key={} result={}'.format(key, result))
             self.errors.append(error_message.format(key, result))
         elif result and not self.soft:
-            log.warning(u'Have error key={} result={}'.format(key, result))
+            log.debug(u'Have error key={} result={}'.format(key, result))
             raise exception(error_message.format(key, result))
 
     def validate(self, data):
-        log.info(u'Run dict validation {}'.format(data))
+        log.debug(u'Run dict validation {}'.format(data))
         if data == self.expected_data:
-            log.info(u'Validation DictChecker success')
+            log.debug(u'Validation DictChecker success')
             return
         assert isinstance(data, dict), _format_error_message('dict', data)
         validated_keys = []
@@ -183,7 +183,7 @@ class DictChecker(BaseChecker):
             miss_keys = set(current_keys) ^ set(validated_keys)
             message = u'Missing keys: {}'.format(u', '.join(miss_keys))
             if miss_keys and self.soft:
-                log.warning(u'Added miss keys to errors')
+                log.debug(u'Added miss keys to errors')
                 self.errors.append(message)
             elif miss_keys and not self.soft:
                 raise MissKeyCheckerError(message)
@@ -220,7 +220,7 @@ class Or(object):
     def _format_errors(self, errors):
         if len(errors) == len(self.expected_data):
             return self._error_message(errors)
-        log.info(u'Validation Or success')
+        log.debug(u'Validation Or success')
 
     def _get_need_dict(self, data):
         """
@@ -235,34 +235,34 @@ class Or(object):
                 continue
             ex_dict_keys = d.keys()
             if ex_dict_keys == data.keys():
-                log.info(u'{} selected equals dict={}'.format(class_name, d))
+                log.debug(u'{} selected equals dict={}'.format(class_name, d))
                 return d
             ex_keys = set()
             active_optional_count = 0
             for k in ex_dict_keys:
                 if _is_optional(k) and k.expected_data not in current_keys:
-                    log.warning(u'Skip {}'.format(k))
+                    log.debug(u'Skip {}'.format(k))
                     continue
                 if _is_optional(k):
-                    log.info(u'Active {}'.format(k))
+                    log.debug(u'Active {}'.format(k))
                     active_optional_count += 1
                     k = k.expected_data
                 ex_keys.add(k)
             intersection_count = len(ex_keys.intersection(current_keys))
             coincide_ratio = intersection_count + active_optional_count
             dicts[coincide_ratio] = d
-        log.info(u'Have choice: {}'.format(dicts))
+        log.debug(u'Have choice: {}'.format(dicts))
         need_dict = dicts.get(max(dicts.keys()))
-        log.info(u'{} selected dict={}'.format(class_name, need_dict))
+        log.debug(u'{} selected dict={}'.format(class_name, need_dict))
         return need_dict
 
     def validate(self, current_data):
         errors = []
-        log.info(u'Run {} validation {}'.format(
+        log.debug(u'Run {} validation {}'.format(
             self.__class__.__name__,
             current_data
         ))
-        log.info(u'{} expected data {}'.format(
+        log.debug(u'{} expected data {}'.format(
             self.__class__.__name__,
             self.expected_data
         ))
@@ -297,7 +297,7 @@ class And(Or):
     def _format_errors(self, errors):
         if errors:
             return self._error_message(errors)
-        log.info(u'Validation And success')
+        log.debug(u'Validation And success')
 
 
 class OptionalKey(object):
@@ -310,7 +310,7 @@ class OptionalKey(object):
 
     def __init__(self, data):
         self.expected_data = data
-        log.info(self.__repr__())
+        log.debug(self.__repr__())
 
     def __repr__(self):
         return u'OptionalKey({})'.format(self.expected_data)
@@ -385,7 +385,7 @@ class Checker(object):
         return res
 
     def validate(self, data):
-        log.info(u'Checker settings: ignore_extra_keys={}, soft={}'.format(
+        log.debug(u'Checker settings: ignore_extra_keys={}, soft={}'.format(
             self.ignore_extra_keys,
             self.soft
         ))
