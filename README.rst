@@ -85,7 +85,7 @@ otherwise it will raise ``CheckerError``.
     Traceback (most recent call last):
     ...
     checker_exceptions.TypeCheckerError:
-    current value "123" is not int
+    current value str is not int
 
 
 Lists, similar containers
@@ -107,15 +107,15 @@ and if have not valid data raise exception after validation
     ...
     checker_exceptions.CheckerError:
     ListCheckerErrors:
-    current value 1 is not str
-    current value 2 is not str
-    current value 3 is not str
+    current value int is not str
+    current value int is not str
+    current value int is not str
 
     >>> Checker([str]).validate((1, 2, 3))
     Traceback (most recent call last):
     ...
     checker_exceptions.ListCheckerError:
-    current value 1 is not str
+    current value int is not str
 
 Dictionaries
 ~~~~~~~~~~~~
@@ -133,7 +133,7 @@ key-value pairs:
     ...
     checker_exceptions.DictCheckerError:
     From key="second_key"
-        current value "2" is not int
+        current value str is not int
 
 
 Operators Or, And, OptionalKey
@@ -175,8 +175,8 @@ try it:
     ...
     checker_exceptions.CheckerError:
     Not valid data Or('int', None)
-        current value "122" is not int
-        current value "122" is not None
+        current value str is not int
+        current value str is not None
 
 If you need validate no required dict key, use OptionalKey
 
@@ -193,6 +193,6 @@ If you need validate no required dict key, use OptionalKey
     ...
     checker_exceptions.DictCheckerError:
     From key="OptionalKey(key2)"
-        current value "value2" is not int
+        current value str is not int
 
 
