@@ -2,7 +2,7 @@
 
 import logging
 
-from checker_exceptions import (
+from json_checker.checker_exceptions import (
     CheckerError,
     TypeCheckerError,
     ListCheckerError,
