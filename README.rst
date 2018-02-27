@@ -196,3 +196,22 @@ If you need validate no required dict key, use OptionalKey
         current value str is not int
 
 
+More logs for debug
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+    >>> import logging
+    >>> from json_checker import Checker
+
+    >>> logging.basicConfig(logging.DEBUG)
+
+    >>> Checker({'k': str}, soft=True).validate({'k': 1})
+    DEBUG:json_checker.json_checker:Checker settings: ignore_extra_keys=False, soft=True
+    DEBUG:json_checker.json_checker:Run dict validation {'k': 1}
+    DEBUG:json_checker.json_checker:Run item validation 1
+    DEBUG:json_checker.json_checker:Have error key=k result=current value int is not str
+    Traceback (most recent call last):
+    ...
+    CheckerError:
+    From key="k": current value int is not str
