@@ -24,9 +24,9 @@ TYPE_DATA_POSITIVE = [
     [int, False, True, None],
     [bool, False, True, None],
     [str, False, "1", None],
-    [int, True, '123', "current value '123' is not int"],
-    [bool, True, 1, "current value 1 is not bool"],
-    [str, True, [1], "current value [1] is not str"],
+    [int, True, '123', "current value str is not int"],
+    [bool, True, 1, "current value int is not bool"],
+    [str, True, [1], "current value list is not str"],
 ]
 TYPE_DATA_NEGATIVE = [
     [str, ["1"]],
@@ -92,7 +92,7 @@ VALIDATOR_DATA_POSITIVE = [
     [Or(str, lambda x: isinstance(type(x), type)), False, 12, None],
     [{OptionalKey('key'): 'value'}, False, {'key': 'value'}, None],
     [None, True, None, None],
-    [None, True, 12, 'current value 12 is not None'],
+    [None, True, 12, 'current value int is not NoneType'],
     [{'test': And(int, lambda x: x > 1)}, True, {'test': 666}, None],
     [{'test': Or(int, None)}, True, {'test': None}, None],
     [{'test': int}, True, {'test': 666}, None],
@@ -109,12 +109,12 @@ VALIDATOR_DATA_POSITIVE = [
     [int, True, 123, None],
     [123, True, 123, None],
     ['test', True, 'test', None],
-    [int, True, '123', "current value '123' is not int"],
+    [int, True, '123', 'current value str is not int'],
     [int, False, 123, None],
     [int, False, True, None],
     [bool, False, True, None],
     [str, False, "1", None],
-    [str, True, 1, "current value 1 is not str"],
+    [str, True, 1, "current value int is not str"],
     ['test', False, "test", None],
     [1, False, 1, None],
 ]
@@ -126,7 +126,7 @@ VALIDATOR_DATA_POSITIVE_MESSAGE = [
     [{'test': Or(int, None)}, {'test': 'None'}, 'From key="test"'],
     [{'test': int}, {'test': '666'}, 'From key="test"'],
     [{'test': [str]}, {'test': ['1', 2, '3']}, 'From key="test"'],
-    [[str], [1, '2', 3], 'current value 1 is not str'],
+    [[str], [1, '2', 3], 'current value int is not str'],
 ]
 VALIDATOR_DATA_ASSERT = [
     [[int], False, [], []],
@@ -211,7 +211,7 @@ def test_validator_some_dicts():
         ignore_extra_keys=False
     ).validate({'key2': 12})
     assert 'Not valid data Or' in result
-    assert 'From key="key2": current value 12 is not str' in result
+    assert 'From key="key2": current value int is not str' in result
 
 
 @pytest.mark.parametrize('data', VALIDATOR_DATA_POSITIVE_MESSAGE)

@@ -1,7 +1,7 @@
 
 import pytest
 
-from json_checker import Checker, And, Or, OptionalKey, SUPPORT_ITER_OBJECTS
+from json_checker import Checker, And, Or, OptionalKey
 from checker_exceptions import (
     CheckerError,
     TypeCheckerError,
@@ -111,7 +111,7 @@ CHECKER_CLASS_DATA = [
 
 
 def _get_expected_exception(ex_object, soft=False):
-    if isinstance(ex_object, SUPPORT_ITER_OBJECTS) and not soft:
+    if isinstance(ex_object, (list, tuple, set, frozenset)) and not soft:
         return ListCheckerError
     elif isinstance(ex_object, dict) and not soft:
         return DictCheckerError
