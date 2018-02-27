@@ -1,16 +1,14 @@
 
 import pytest
 
-from json_checker import (
+from json_checker import And, Or, OptionalKey
+from json_checker.checker import (
     ListChecker,
     TypeChecker,
     DictChecker,
     Validator,
-    And,
-    Or,
-    OptionalKey
 )
-from checker_exceptions import (
+from json_checker.checker_exceptions import (
     TypeCheckerError,
     ListCheckerError,
     DictCheckerError,
