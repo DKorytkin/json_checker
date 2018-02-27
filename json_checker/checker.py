@@ -11,20 +11,6 @@ from checker_exceptions import (
 )
 
 
-__version__ = '1.1.6'
-__all__ = [
-    'Checker',
-    'And',
-    'Or',
-    'OptionalKey',
-    'CheckerError',
-    'TypeCheckerError',
-    'ListCheckerError',
-    'DictCheckerError',
-    'MissKeyCheckerError'
-]
-
-
 log = logging.getLogger(__name__)
 
 
