@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 
 import logging
 
-from checker_exceptions import (
+from json_checker.checker_exceptions import (
     CheckerError,
     TypeCheckerError,
     ListCheckerError,
@@ -10,28 +11,11 @@ from checker_exceptions import (
 )
 
 
-__version__ = '1.1.6'
-__all__ = [
-    'Checker',
-    'And',
-    'Or',
-    'OptionalKey',
-    'CheckerError',
-    'TypeCheckerError',
-    'ListCheckerError',
-    'DictCheckerError',
-    'MissKeyCheckerError'
-]
-
-
 log = logging.getLogger(__name__)
 
 
-SUPPORT_ITER_OBJECTS = (list, tuple, set, frozenset)
-
-
 def _is_iter(data):
-    return isinstance(data, SUPPORT_ITER_OBJECTS)
+    return isinstance(data, (list, tuple, set, frozenset))
 
 
 def _is_dict(data):
@@ -57,11 +41,11 @@ def _is_optional(data):
 def _format_data(data):
     if callable(data):
         return data.__name__
-    return repr(data)
+    return type(data).__name__
 
 
 def _format_error_message(expected_data, current_data):
-    return u'current value {} is not {}'.format(
+    return 'current value %s is not %s' % (
         _format_data(current_data),
         _format_data(expected_data)
     )
@@ -76,8 +60,8 @@ class BaseChecker(object):
 
     def _format_errors(self):
         if self.errors:
-            return u'\n'.join(self.errors)
-        log.debug(u'Validation {} success'.format(self.__class__.__name__))
+            return '\n'.join(self.errors)
+        log.debug('Validation %s success' % self.__class__.__name__)
 
 
 class ListChecker(BaseChecker):
@@ -92,9 +76,9 @@ class ListChecker(BaseChecker):
             raise ListCheckerError(result)
 
     def validate(self, current_data):
-        log.debug(u'Run list validation {}'.format(current_data))
+        log.debug('Run list validation %s' % repr(current_data))
         if not _is_iter(current_data):
-            error = _format_error_message(current_data, SUPPORT_ITER_OBJECTS)
+            error = _format_error_message(self.expected_data, current_data)
             self._append_errors_or_raise(error)
             return self._format_errors()
         if self.expected_data == current_data:
@@ -109,7 +93,7 @@ class ListChecker(BaseChecker):
                 try:
                     result = checker.validate(cu)
                 except TypeCheckerError as e:
-                    result = e.__str__().replace(u'\n', u'')
+                    result = e.__str__().replace('\n', '')
                 self._append_errors_or_raise(result)
             return self._format_errors()
         for checker in [Validator(d, self.soft) for d in self.expected_data]:
@@ -117,7 +101,7 @@ class ListChecker(BaseChecker):
                 try:
                     result = checker.validate(data)
                 except TypeCheckerError as e:
-                    result = e.__str__().replace(u'\n', u'')
+                    result = e.__str__().replace('\n', '')
                 self._append_errors_or_raise(result)
         return self._format_errors()
 
@@ -129,13 +113,14 @@ class TypeChecker(BaseChecker):
             return _format_error_message(*self.errors)
 
     def validate(self, current_data):
-        log.debug(u'Run item validation {}'.format(current_data))
+        # TODO fix it in python2 repr returned not correct unicode
+        log.debug('Run item validation %s' % repr(current_data))
         if not isinstance(current_data, self.expected_data):
             self.errors = (self.expected_data, current_data)
             if self.soft:
                 return self._format_errors()
             raise TypeCheckerError(self._format_errors())
-        log.debug(u'Validation TypeChecker success')
+        log.debug('Validation TypeChecker success')
 
 
 class DictChecker(BaseChecker):
@@ -145,20 +130,19 @@ class DictChecker(BaseChecker):
         super(DictChecker, self).__init__(data, soft)
 
     def _append_errors_or_raise(self, key, result, exception):
-        error_message = u'From key="{}": {}'
         if result and isinstance(result, list):
-            result = u'\n\t'.join(result)
+            result = '\n\t'.join(result)
         if result and self.soft:
-            log.debug(u'Have error key={} result={}'.format(key, result))
-            self.errors.append(error_message.format(key, result))
+            log.debug('Have error key=%s result=%s' % (key, result))
+            self.errors.append('From key="%s": %s' % (key, result))
         elif result and not self.soft:
-            log.debug(u'Have error key={} result={}'.format(key, result))
-            raise exception(error_message.format(key, result))
+            log.debug('Have error key=%s result=%s' % (key, result))
+            raise exception('From key="%s": %s' % (key, result))
 
     def validate(self, data):
-        log.debug(u'Run dict validation {}'.format(data))
+        log.debug('Run dict validation %s' % repr(data))
         if data == self.expected_data:
-            log.debug(u'Validation DictChecker success')
+            log.debug('Validation DictChecker success')
             return
         assert isinstance(data, dict), _format_error_message('dict', data)
         validated_keys = []
@@ -168,7 +152,7 @@ class DictChecker(BaseChecker):
                 continue
             ex_key = key if not _is_optional(key) else key.expected_data
             if ex_key not in current_keys:
-                message = u'Missing key'
+                message = 'Missing key'
                 self._append_errors_or_raise(key, message, MissKeyCheckerError)
                 continue
             current_value = data.get(ex_key)
@@ -176,14 +160,14 @@ class DictChecker(BaseChecker):
             try:
                 result = checker.validate(current_value)
             except TypeCheckerError as e:
-                result = e.__str__().replace(u'\n', u'')
+                result = e.__str__().replace('\n', '')
             validated_keys.append(ex_key)
             self._append_errors_or_raise(key, result, DictCheckerError)
         if not self.ignore:
             miss_keys = set(current_keys) ^ set(validated_keys)
-            message = u'Missing keys: {}'.format(u', '.join(miss_keys))
+            message = 'Missing keys: %s' % ', '.join(miss_keys)
             if miss_keys and self.soft:
-                log.debug(u'Added miss keys to errors')
+                log.debug('Added miss keys to errors')
                 self.errors.append(message)
             elif miss_keys and not self.soft:
                 raise MissKeyCheckerError(message)
@@ -202,25 +186,22 @@ class Or(object):
         self.expected_data = data
 
     def __repr__(self):
-        return u'{class_name}{data}'.format(
-            class_name=self.__class__.__name__,
-            data=self.expected_data
-        )
+        return '%s%s' % (self.__class__.__name__, self.expected_data)
 
     def _format_data(self):
         return tuple(_format_data(d) for d in self.expected_data)
 
     def _error_message(self, errors):
-        return u'Not valid data {}{}\n{}'.format(
+        return 'Not valid data %s%s\n%s' % (
             self.__class__.__name__,
             self._format_data(),
-            u'\n'.join(errors)
+            '\n'.join(errors)
         )
 
     def _format_errors(self, errors):
         if len(errors) == len(self.expected_data):
             return self._error_message(errors)
-        log.debug(u'Validation Or success')
+        log.debug('Validation Or success')
 
     def _get_need_dict(self, data):
         """
@@ -235,34 +216,34 @@ class Or(object):
                 continue
             ex_dict_keys = d.keys()
             if ex_dict_keys == data.keys():
-                log.debug(u'{} selected equals dict={}'.format(class_name, d))
+                log.debug('%s selected equals dict=%s' % (class_name, repr(d)))
                 return d
             ex_keys = set()
             active_optional_count = 0
             for k in ex_dict_keys:
                 if _is_optional(k) and k.expected_data not in current_keys:
-                    log.debug(u'Skip {}'.format(k))
+                    log.debug('Skip %s' % k)
                     continue
                 if _is_optional(k):
-                    log.debug(u'Active {}'.format(k))
+                    log.debug('Active %s' % k)
                     active_optional_count += 1
                     k = k.expected_data
                 ex_keys.add(k)
             intersection_count = len(ex_keys.intersection(current_keys))
             coincide_ratio = intersection_count + active_optional_count
             dicts[coincide_ratio] = d
-        log.debug(u'Have choice: {}'.format(dicts))
+        log.debug('Have choice: %s' % str(dicts))
         need_dict = dicts.get(max(dicts.keys()))
-        log.debug(u'{} selected dict={}'.format(class_name, need_dict))
+        log.debug('%s selected dict=%s' % (class_name, repr(need_dict)))
         return need_dict
 
     def validate(self, current_data):
         errors = []
-        log.debug(u'Run {} validation {}'.format(
+        log.debug('Run %s validation %s' % (
             self.__class__.__name__,
             current_data
         ))
-        log.debug(u'{} expected data {}'.format(
+        log.debug('%s expected data %s' % (
             self.__class__.__name__,
             self.expected_data
         ))
@@ -297,7 +278,7 @@ class And(Or):
     def _format_errors(self, errors):
         if errors:
             return self._error_message(errors)
-        log.debug(u'Validation And success')
+        log.debug('Validation And success')
 
 
 class OptionalKey(object):
@@ -313,7 +294,7 @@ class OptionalKey(object):
         log.debug(self.__repr__())
 
     def __repr__(self):
-        return u'OptionalKey({})'.format(self.expected_data)
+        return 'OptionalKey(%s)' % self.expected_data
 
 
 class Validator(object):
@@ -324,7 +305,7 @@ class Validator(object):
         self.ignore_extra_keys = ignore_extra_keys
 
     def __repr__(self):
-        return u'Validator({})'.format(self.expected_data)
+        return 'Validator(%s)' % self.expected_data
 
     def validate(self, data):
         if self.expected_data == data:
@@ -351,14 +332,12 @@ class Validator(object):
                 return result
         elif _is_func(self.expected_data):
             func = self.expected_data
-            error_message = u'Function error {}'
             try:
                 if not func(data):
-                    return error_message.format(_format_data(func))
+                    return 'Function error %s' % _format_data(func)
             except TypeError as e:
-                return error_message.format(
-                    _format_data(func) + u' {}'.format(e.__str__())
-                )
+                message = _format_data(func) + ' %s' % e.__str__()
+                return 'Function error %s' % message
         elif self.expected_data is None:
             if self.expected_data != data:
                 return _format_error_message(self.expected_data, data)
@@ -385,7 +364,7 @@ class Checker(object):
         return res
 
     def validate(self, data):
-        log.debug(u'Checker settings: ignore_extra_keys={}, soft={}'.format(
+        log.debug('Checker settings: ignore_extra_keys=%s, soft=%s' % (
             self.ignore_extra_keys,
             self.soft
         ))

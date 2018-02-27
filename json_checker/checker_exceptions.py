@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 
 class CheckerError(Exception):
@@ -6,9 +7,11 @@ class CheckerError(Exception):
         self.errors = errors
 
     def __str__(self):
-        return '\n{}'.format('\n'.join(
-            self.errors if isinstance(self.errors, list) else [self.errors]
-        ))
+        if isinstance(self.errors, list):
+            errors = '\n'.join(self.errors)
+        else:
+            errors = '\n'.join([self.errors])
+        return '\n%s' % errors
 
 
 class TypeCheckerError(CheckerError):
