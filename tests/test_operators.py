@@ -27,9 +27,9 @@ OPTIONAL_DATA = [
     ]
 ]
 OPERATOR_CLASS_DATA = [
-    [Or, 1, 'Or(1,)'],
-    [And, 1, 'And(1,)'],
-    [OptionalKey, 'test', 'OptionalKey(test)'],
+    [Or, 1, "Or(['int'])"],
+    [And, 1, "And(['int'])"],
+    [OptionalKey, 'test', 'OptionalKey(str)'],
 ]
 TEST_DICT = {OptionalKey('key2'): str, 'test': int}
 TEST_OPTION_DICT = {

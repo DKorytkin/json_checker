@@ -1,18 +1,20 @@
 
 import pytest
 
-from json_checker import And, Or, OptionalKey
+from json_checker import (
+    And,
+    Or,
+    OptionalKey,
+    TypeCheckerError,
+    ListCheckerError,
+    DictCheckerError,
+    MissKeyCheckerError
+)
 from json_checker.app import (
     ListChecker,
     TypeChecker,
     DictChecker,
     Validator,
-)
-from json_checker.checker_exceptions import (
-    TypeCheckerError,
-    ListCheckerError,
-    DictCheckerError,
-    MissKeyCheckerError
 )
 
 
@@ -172,27 +174,29 @@ def test_list_checker_negative(list_data, current_data):
 @pytest.mark.parametrize('data', DICT_DATA_POSITIVE)
 def test_dict_checker_positive(data):
     dict_data, soft, current_data, expected_result = data
-    dict_checker = DictChecker(dict_data, soft=soft, ignore=False)
+    dict_checker = DictChecker(dict_data, soft=soft, ignore_extra_keys=False)
     assert dict_checker.validate(current_data) == expected_result
 
 
 @pytest.mark.parametrize('data', DICT_DATA_POSITIVE_MESSAGE)
 def test_dict_checker_positive_message(data):
     dict_data, current_data = data
-    dict_checker = DictChecker(dict_data, soft=True, ignore=False)
+    dict_checker = DictChecker(dict_data, soft=True, ignore_extra_keys=False)
     assert 'From key="test"' in dict_checker.validate(current_data)
 
 
 @pytest.mark.parametrize(('dict_data', 'current_data'), DICT_DATA_NEGATIVE)
 def test_dict_checker_negative(dict_data, current_data):
+    checker = DictChecker(dict_data, soft=False, ignore_extra_keys=False)
     with pytest.raises(DictCheckerError):
-        DictChecker(dict_data, soft=False, ignore=False).validate(current_data)
+        checker.validate(current_data)
 
 
 @pytest.mark.parametrize(('dict_data', 'current_data'), DICT_DATA_ASSERT)
 def test_dict_checker_assert(dict_data, current_data):
+    checker = DictChecker(dict_data, soft=False, ignore_extra_keys=False)
     with pytest.raises(AssertionError):
-        DictChecker(dict_data, soft=False, ignore=False).validate(current_data)
+        checker.validate(current_data)
 
 
 @pytest.mark.parametrize('data', VALIDATOR_DATA_POSITIVE)
@@ -204,7 +208,7 @@ def test_validator_positive(data):
 
 def test_validator_some_dicts():
     result = Validator(
-        expected_data=Or({'key1': int}, {'key2': str}),
+        data=Or({'key1': int}, {'key2': str}),
         soft=False,
         ignore_extra_keys=False
     ).validate({'key2': 12})
@@ -221,5 +225,6 @@ def test_validator_positive_message(data):
 
 @pytest.mark.parametrize(('ex_data', 'cu_data'), VALIDATOR_DATA_MISS_KEY)
 def test_validator_miss_key(ex_data, cu_data):
+    checker = DictChecker(ex_data, soft=False, ignore_extra_keys=False)
     with pytest.raises(MissKeyCheckerError):
-        DictChecker(ex_data, soft=False, ignore=False).validate(cu_data)
+        checker.validate(cu_data)
