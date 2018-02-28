@@ -4,7 +4,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 from functools import wraps
 
-import six
+from six import with_metaclass
 
 from json_checker.exceptions import (
     CheckerError,
@@ -61,7 +61,7 @@ def validation_logger(func):
     def wrapper(*args, **kwargs):
         cls = args[0] if args else ''
         rest_args = args[1:] if args else ''
-        log.debug('%s start with: %s %s' % (cls, rest_args or '', kwargs or ''))
+        log.debug('%s start with: %s %s' % (cls, rest_args, kwargs or ''))
         res = func(*args, **kwargs)
         if not res:
             log.debug('%s success' % cls)
@@ -71,8 +71,7 @@ def validation_logger(func):
     return wrapper
 
 
-@six.add_metaclass(ABCMeta)
-class ABCCheckerBase(object):
+class ABCCheckerBase(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def _format_errors(self):
