@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import codecs
-from setuptools import setup
+from setuptools import setup, find_packages
 
 import json_checker
 
@@ -9,12 +9,17 @@ import json_checker
 setup(
     name="json_checker",
     version=json_checker.__version__,
-    author='Denis Korytkin',
+    author=json_checker.__author__,
     author_email='dkorytkin@gmail.com',
     description='Simple data validation library',
-    keywords='Json checker from auto tests api',
+    keywords='Json checker, API testing',
     url='https://github.com/DKorytkin/json_checker',
-    py_modules=['json_checker', 'checker_exceptions'],
+    packages=find_packages(),
+    py_modules=[
+        'json_checker.app',
+        'json_checker.exceptions'
+    ],
+    install_requires=['six==1.11.0'],
     python_requires='>=2.7',
     long_description=codecs.open('README.rst', 'r', 'utf-8').read(),
     classifiers=[
