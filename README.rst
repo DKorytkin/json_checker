@@ -204,13 +204,14 @@ More logs for debug
     >>> import logging
     >>> from json_checker import Checker
 
-    >>> logging.basicConfig(logging.DEBUG)
+    >>> logging.basicConfig(level=logging.DEBUG)
 
     >>> Checker({'k': str}, soft=True).validate({'k': 1})
     DEBUG:json_checker.app:Checker settings: ignore_extra_keys=False, soft=True
-    DEBUG:json_checker.app:Run dict validation {'k': 1}
-    DEBUG:json_checker.app:Run item validation 1
-    DEBUG:json_checker.app:Have error key=k result=current value int is not str
+    DEBUG:json_checker.app:DictChecker(dict) start with: ({'k': 1},)
+    DEBUG:json_checker.app:TypeChecker(str) start with: (1,)
+    DEBUG:json_checker.app:TypeChecker(str) error current value int is not str
+    DEBUG:json_checker.app:DictChecker(dict) error From key="k": current value int is not str
     Traceback (most recent call last):
     ...
     CheckerError:

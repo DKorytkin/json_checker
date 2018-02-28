@@ -60,7 +60,7 @@ def validation_logger(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         cls = args[0] if args else ''
-        rest_args = args[1:] if args else ''
+        rest_args = args[1] if len(args) > 1 else ''
         log.debug('%s start with: %s %s' % (cls, rest_args, kwargs or ''))
         res = func(*args, **kwargs)
         if not res:
@@ -222,7 +222,10 @@ class Or(ABCCheckerBase):
         self.result = None
 
     def __str__(self):
-        return '%s%s' % (self.__class__.__name__, self.expected_data)
+        return '%s(%s)' % (
+            self.__class__.__name__,
+            [_format_data(e) for e in self.expected_data]
+        )
 
     def _format_data(self):
         return tuple(_format_data(d) for d in self.expected_data)
@@ -326,7 +329,7 @@ class OptionalKey(object):
         log.debug(self.__str__())
 
     def __str__(self):
-        return 'OptionalKey(%s)' % self.expected_data
+        return 'OptionalKey(%s)' % _format_data(self.expected_data)
 
 
 class Validator(BaseChecker):
