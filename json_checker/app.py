@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from abc import ABCMeta, abstractmethod
+from functools import wraps
 
-from json_checker.checker_exceptions import (
+import six
+
+from json_checker.exceptions import (
     CheckerError,
     TypeCheckerError,
     ListCheckerError,
@@ -41,7 +45,7 @@ def _is_optional(data):
 def _format_data(data):
     if callable(data):
         return data.__name__
-    return type(data).__name__
+    return _format_data(type(data))
 
 
 def _format_error_message(expected_data, current_data):
@@ -51,17 +55,58 @@ def _format_error_message(expected_data, current_data):
     )
 
 
-class BaseChecker(object):
+def validation_logger(func):
 
-    def __init__(self, data, soft):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        cls = args[0] if args else ''
+        rest_args = args[1:] if args else ''
+        log.debug('%s start with: %s %s' % (cls, rest_args or '', kwargs or ''))
+        res = func(*args, **kwargs)
+        if not res:
+            log.debug('%s success' % cls)
+        else:
+            log.debug('%s error %s' % (cls, res))
+        return res
+    return wrapper
+
+
+@six.add_metaclass(ABCMeta)
+class ABCCheckerBase(object):
+
+    @abstractmethod
+    def _format_errors(self):
+        pass
+
+    @abstractmethod
+    def validate(self, data):
+        pass
+
+    @abstractmethod
+    def __str__(self):
+        pass
+
+
+class BaseChecker(ABCCheckerBase):
+
+    def __init__(self, data, soft, ignore_extra_keys=False):
         self.expected_data = data
         self.soft = soft
+        self.ignore_extra_keys = ignore_extra_keys
         self.errors = []
+
+    def __str__(self):
+        return '%s(%s)' % (
+            self.__class__.__name__,
+            _format_data(self.expected_data)
+        )
+
+    def validate(self, data):
+        pass
 
     def _format_errors(self):
         if self.errors:
             return '\n'.join(self.errors)
-        log.debug('Validation %s success' % self.__class__.__name__)
 
 
 class ListChecker(BaseChecker):
@@ -75,8 +120,8 @@ class ListChecker(BaseChecker):
         elif result and not self.soft:
             raise ListCheckerError(result)
 
+    @validation_logger
     def validate(self, current_data):
-        log.debug('Run list validation %s' % repr(current_data))
         if not _is_iter(current_data):
             error = _format_error_message(self.expected_data, current_data)
             self._append_errors_or_raise(error)
@@ -112,37 +157,28 @@ class TypeChecker(BaseChecker):
         if self.errors:
             return _format_error_message(*self.errors)
 
+    @validation_logger
     def validate(self, current_data):
-        # TODO fix it in python2 repr returned not correct unicode
-        log.debug('Run item validation %s' % repr(current_data))
         if not isinstance(current_data, self.expected_data):
             self.errors = (self.expected_data, current_data)
             if self.soft:
                 return self._format_errors()
             raise TypeCheckerError(self._format_errors())
-        log.debug('Validation TypeChecker success')
 
 
 class DictChecker(BaseChecker):
-
-    def __init__(self, data, soft, ignore):
-        self.ignore = ignore
-        super(DictChecker, self).__init__(data, soft)
 
     def _append_errors_or_raise(self, key, result, exception):
         if result and isinstance(result, list):
             result = '\n\t'.join(result)
         if result and self.soft:
-            log.debug('Have error key=%s result=%s' % (key, result))
             self.errors.append('From key="%s": %s' % (key, result))
         elif result and not self.soft:
-            log.debug('Have error key=%s result=%s' % (key, result))
             raise exception('From key="%s": %s' % (key, result))
 
+    @validation_logger
     def validate(self, data):
-        log.debug('Run dict validation %s' % repr(data))
         if data == self.expected_data:
-            log.debug('Validation DictChecker success')
             return
         assert isinstance(data, dict), _format_error_message('dict', data)
         validated_keys = []
@@ -156,14 +192,14 @@ class DictChecker(BaseChecker):
                 self._append_errors_or_raise(key, message, MissKeyCheckerError)
                 continue
             current_value = data.get(ex_key)
-            checker = Validator(value, self.soft, self.ignore)
+            checker = Validator(value, self.soft, self.ignore_extra_keys)
             try:
                 result = checker.validate(current_value)
             except TypeCheckerError as e:
                 result = e.__str__().replace('\n', '')
             validated_keys.append(ex_key)
             self._append_errors_or_raise(key, result, DictCheckerError)
-        if not self.ignore:
+        if not self.ignore_extra_keys:
             miss_keys = set(current_keys) ^ set(validated_keys)
             message = 'Missing keys: %s' % ', '.join(miss_keys)
             if miss_keys and self.soft:
@@ -174,7 +210,7 @@ class DictChecker(BaseChecker):
         return self._format_errors()
 
 
-class Or(object):
+class Or(ABCCheckerBase):
     """
     from validation some params
     even if one param must be returned True
@@ -184,8 +220,9 @@ class Or(object):
 
     def __init__(self, *data):
         self.expected_data = data
+        self.result = None
 
-    def __repr__(self):
+    def __str__(self):
         return '%s%s' % (self.__class__.__name__, self.expected_data)
 
     def _format_data(self):
@@ -198,10 +235,17 @@ class Or(object):
             '\n'.join(errors)
         )
 
-    def _format_errors(self, errors):
-        if len(errors) == len(self.expected_data):
-            return self._error_message(errors)
-        log.debug('Validation Or success')
+    def _format_errors(self):
+        if not self.result:
+            return
+        if len(self.result) == len(self.expected_data):
+            return self._error_message(self.result)
+
+    def _is_all_dicts(self, current_data):
+        return bool(
+            _is_dict(current_data) and
+            all(_is_dict(d) for d in self.expected_data)
+        )
 
     def _get_need_dict(self, data):
         """
@@ -237,34 +281,24 @@ class Or(object):
         log.debug('%s selected dict=%s' % (class_name, repr(need_dict)))
         return need_dict
 
+    @validation_logger
     def validate(self, current_data):
-        errors = []
-        log.debug('Run %s validation %s' % (
-            self.__class__.__name__,
-            current_data
-        ))
-        log.debug('%s expected data %s' % (
-            self.__class__.__name__,
-            self.expected_data
-        ))
-        if (
-            _is_dict(current_data) and
-            all(_is_dict(d) for d in self.expected_data)
-        ):
+        if self._is_all_dicts(current_data):
             need_data = self._get_need_dict(current_data)
             validator = Validator(need_data, soft=True)
             result = validator.validate(current_data)
             if result:
                 return self._error_message([result])
             return
+        self.result = []
         for checker in [Validator(d, soft=True) for d in self.expected_data]:
             try:
                 result = checker.validate(current_data)
             except AssertionError as e:
                 result = e.__str__()
             if result:
-                errors.append(result)
-        return self._format_errors(errors)
+                self.result.append(result)
+        return self._format_errors()
 
 
 class And(Or):
@@ -275,10 +309,9 @@ class And(Or):
     current data mast be checked, all conditions returned True
     """
 
-    def _format_errors(self, errors):
-        if errors:
-            return self._error_message(errors)
-        log.debug('Validation And success')
+    def _format_errors(self):
+        if self.result:
+            return self._error_message(self.result)
 
 
 class OptionalKey(object):
@@ -291,21 +324,13 @@ class OptionalKey(object):
 
     def __init__(self, data):
         self.expected_data = data
-        log.debug(self.__repr__())
+        log.debug(self.__str__())
 
-    def __repr__(self):
+    def __str__(self):
         return 'OptionalKey(%s)' % self.expected_data
 
 
-class Validator(object):
-
-    def __init__(self, expected_data, soft, ignore_extra_keys=False):
-        self.expected_data = expected_data
-        self.soft = soft
-        self.ignore_extra_keys = ignore_extra_keys
-
-    def __repr__(self):
-        return 'Validator(%s)' % self.expected_data
+class Validator(BaseChecker):
 
     def validate(self, data):
         if self.expected_data == data:
@@ -317,7 +342,7 @@ class Validator(object):
             dict_checker = DictChecker(
                 data=self.expected_data,
                 soft=self.soft,
-                ignore=self.ignore_extra_keys
+                ignore_extra_keys=self.ignore_extra_keys
             )
             return dict_checker.validate(data)
         elif _is_class(self.expected_data):
@@ -345,7 +370,7 @@ class Validator(object):
             return _format_error_message(self.expected_data, data)
 
 
-class Checker(object):
+class Checker(ABCCheckerBase):
 
     def __init__(self, expected_data, soft=False, ignore_extra_keys=False):
         """
@@ -356,12 +381,21 @@ class Checker(object):
         self.expected_data = expected_data
         self.ignore_extra_keys = ignore_extra_keys
         self.soft = soft
+        self.result = None
 
-    def __repr__(self):
-        res = str(self.expected_data)
+    def __str__(self):
         if callable(self.expected_data):
             res = self.expected_data.__name__
+        else:
+            res = str(self.expected_data)
         return res
+
+    def _format_errors(self):
+        if isinstance(self.result, list):
+            message = '\n'.join(self.result)
+        else:
+            message = self.result
+        return '\n%s' % message
 
     def validate(self, data):
         log.debug('Checker settings: ignore_extra_keys=%s, soft=%s' % (
@@ -369,11 +403,11 @@ class Checker(object):
             self.soft
         ))
         checker = Validator(
-            expected_data=self.expected_data,
+            data=self.expected_data,
             soft=self.soft,
             ignore_extra_keys=self.ignore_extra_keys
         )
-        result = checker.validate(data)
-        if result:
-            raise CheckerError(result)
+        self.result = checker.validate(data)
+        if self.result:
+            raise CheckerError(self._format_errors())
         return data
