@@ -1,6 +1,6 @@
 
 from json_checker.app import Checker, And, Or, OptionalKey
-from json_checker.checker_exceptions import (
+from json_checker.exceptions import (
     CheckerError,
     TypeCheckerError,
     ListCheckerError,
