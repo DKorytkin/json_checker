@@ -14,6 +14,7 @@ setup(
     url='https://github.com/DKorytkin/json_checker',
     platforms=['linux'],
     packages=find_packages(),
+    license='MIT license',
     py_modules=[
         'json_checker.app',
         'json_checker.exceptions'
@@ -29,5 +30,8 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Topic :: Software Development :: Testing',
+        'Topic :: Software Development :: Libraries',
+        'Topic :: Utilities',
+        'License :: OSI Approved :: MIT License',
     ],
 )
