@@ -8,8 +8,7 @@ from json_checker.exceptions import (
     MissKeyCheckerError
 )
 
-__author__ = 'Denis Korytkin'
-__version__ = '1.2.0'
+
 __all__ = [
     'Checker',
     'And',
