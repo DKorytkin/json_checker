@@ -233,11 +233,7 @@ class Or(ABCCheckerBase):
         return tuple(_format_data(d) for d in self.expected_data)
 
     def _error_message(self, errors):
-        return 'Not valid data %s%s\n%s' % (
-            self.__class__.__name__,
-            self._format_data(),
-            '\n'.join(errors)
-        )
+        return 'Not valid data %s,\n\t%s' % (self, ',\t'.join(errors))
 
     def _format_errors(self):
         if not self.result:
@@ -363,10 +359,10 @@ class Validator(BaseChecker):
             func = self.expected_data
             try:
                 if not func(data):
-                    return 'Function error %s' % _format_data(func)
+                    return 'function error'
             except TypeError as e:
                 message = _format_data(func) + ' %s' % e.__str__()
-                return 'Function error %s' % message
+                return 'function error %s' % message
         elif self.expected_data is None:
             if self.expected_data != data:
                 return _format_error_message(self.expected_data, data)

@@ -85,7 +85,7 @@ otherwise it will raise ``CheckerError``.
     Traceback (most recent call last):
     ...
     checker_exceptions.TypeCheckerError:
-    current value str is not int
+    current value '123' (str) is not int
 
 
 Lists, similar containers
@@ -107,15 +107,15 @@ and if have not valid data raise exception after validation
     ...
     checker_exceptions.CheckerError:
     ListCheckerErrors:
-    current value int is not str
-    current value int is not str
-    current value int is not str
+    current value 1 (int) is not str
+    current value 2 (int) is not str
+    current value 3 (int) is not str
 
     >>> Checker([str]).validate((1, 2, 3))
     Traceback (most recent call last):
     ...
     checker_exceptions.ListCheckerError:
-    current value int is not str
+    current value 1 (int) is not str
 
 Dictionaries
 ~~~~~~~~~~~~
@@ -133,7 +133,7 @@ key-value pairs:
     ...
     checker_exceptions.DictCheckerError:
     From key="second_key"
-        current value str is not int
+        current value '2' (str) is not int
 
 
 Operators Or, And, OptionalKey
@@ -155,7 +155,8 @@ try it:
     Traceback (most recent call last):
     ...
     checker_exceptions.CheckerError:
-        Not valid data And('int', '<lambda>')
+    Not valid data And(int, <lambda>),
+        function error
 
 
 If you need validation not required data value, use Or operator
@@ -174,9 +175,8 @@ try it:
     Traceback (most recent call last):
     ...
     checker_exceptions.CheckerError:
-    Not valid data Or('int', None)
-        current value str is not int
-        current value str is not None
+    Not valid data Or('int', None),
+        current value '666' (str) is not int, current value '666' (str) is not None
 
 If you need validate no required dict key, use OptionalKey
 
@@ -193,7 +193,7 @@ If you need validate no required dict key, use OptionalKey
     ...
     checker_exceptions.DictCheckerError:
     From key="OptionalKey(key2)"
-        current value str is not int
+        current value 'value2' (str) is not int
 
 
 More logs for debug
@@ -208,11 +208,11 @@ More logs for debug
 
     >>> Checker({'k': str}, soft=True).validate({'k': 1})
     DEBUG:json_checker.app:Checker settings: ignore_extra_keys=False, soft=True
-    DEBUG:json_checker.app:DictChecker(dict) start with: ({'k': 1},)
-    DEBUG:json_checker.app:TypeChecker(str) start with: (1,)
-    DEBUG:json_checker.app:TypeChecker(str) error current value int is not str
-    DEBUG:json_checker.app:DictChecker(dict) error From key="k": current value int is not str
+    DEBUG:json_checker.app:DictChecker({'k': <class 'str'>} (dict)) start with: {'k': 1}
+    DEBUG:json_checker.app:TypeChecker(str) start with: 1
+    DEBUG:json_checker.app:TypeChecker(str) error current value 1 (int) is not str
+    DEBUG:json_checker.app:DictChecker({'k': <class 'str'>} (dict)) error From key="k": current value 1 (int) is not str
     Traceback (most recent call last):
     ...
     CheckerError:
-    From key="k": current value int is not str
+    From key="k": current value 1 (int) is not str
