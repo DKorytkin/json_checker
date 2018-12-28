@@ -45,7 +45,9 @@ def _is_optional(data):
 def _format_data(data):
     if callable(data):
         return data.__name__
-    return _format_data(type(data))
+    elif data is None:
+        return repr(data)
+    return '{} ({})'.format(repr(data), type(data).__name__)
 
 
 def _format_error_message(expected_data, current_data):
@@ -224,7 +226,7 @@ class Or(ABCCheckerBase):
     def __str__(self):
         return '%s(%s)' % (
             self.__class__.__name__,
-            [_format_data(e) for e in self.expected_data]
+            ', '.join([_format_data(e) for e in self.expected_data])
         )
 
     def _format_data(self):
@@ -329,7 +331,7 @@ class OptionalKey(object):
         log.debug(self.__str__())
 
     def __str__(self):
-        return 'OptionalKey(%s)' % _format_data(self.expected_data)
+        return 'OptionalKey({})'.format(self.expected_data)
 
 
 class Validator(BaseChecker):
