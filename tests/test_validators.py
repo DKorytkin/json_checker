@@ -83,7 +83,7 @@ DICT_DATA_ASSERT = [
 VALIDATOR_DATA_POSITIVE = [
     [lambda x: x > 1, True, 12, None],
     [lambda x: x > 1, False, 12, None],
-    [lambda x: x > 1, True, -12, 'Function error <lambda>'],
+    [lambda x: x > 1, True, -12, 'function error'],
     [And(int, lambda x: x > 1), False, 12, None],
     [And(str, lambda x: x in ('1', '2')), False, '2', None],
     [And(int, bool), False, True, None],
@@ -119,7 +119,7 @@ VALIDATOR_DATA_POSITIVE = [
     [1, False, 1, None],
 ]
 VALIDATOR_DATA_POSITIVE_MESSAGE = [
-    [And(int, lambda x: x > 1), -12, 'Not valid data And'],
+    [And(int, lambda x: x > 1), -12, 'Not valid data And(int, <lambda>),\n\tfunction error'],
     [Or(int, None), '12', 'Not valid data Or'],
     [{OptionalKey('key'): 'value'}, {'key2': 'value2'}, 'Missing keys: key2'],
     [{'test': And(int, lambda x: x > 1)}, {'test': -666}, 'From key="test"'],
