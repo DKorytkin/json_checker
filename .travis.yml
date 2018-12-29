@@ -1,5 +1,5 @@
 sudo: enabled
-dist: trusty
+dist: xenial
 
 language: python
 python:
@@ -18,3 +18,11 @@ script:
 
 after_success:
  - codecov -t "$CODECOV_TOKEN"
+
+deploy:
+  provider: pypi
+  distributions: "sdist bdist_wheel"
+  user: ${PIPY_USER}
+  password: ${PIPY_PASS}
+  on:
+    tags: true
