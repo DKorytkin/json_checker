@@ -101,7 +101,7 @@ def test_operator_and(data):
 
 
 @pytest.mark.parametrize('data', AND_DATA_MESSAGE)
-def test_operator_and(data):
+def test_error_messages_operator_and(data):
     and_data, current_data = data
     assert 'Not valid data And' in And(*and_data).validate(current_data)
 

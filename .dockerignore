@@ -1,0 +1,13 @@
+
+*.pyc
+
+venv
+build
+dist
+json_checker.egg-info
+
+.pytest_cache
+.gitignore
+.dockerignore
+.travis.yml
+

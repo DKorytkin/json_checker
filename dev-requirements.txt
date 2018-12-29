@@ -1,0 +1,13 @@
+
+six>=1.10.0
+
+flake8==3.6.0
+
+pytest==4.0.2
+pytest-cov==2.6.0
+
+codecov==2.0.15
+coverage==4.5.2
+
+twine==1.12.1
+wheel==0.32.3

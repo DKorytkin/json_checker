@@ -119,14 +119,22 @@ VALIDATOR_DATA_POSITIVE = [
     [1, False, 1, None],
 ]
 VALIDATOR_DATA_POSITIVE_MESSAGE = [
-    [And(int, lambda x: x > 1), -12, 'Not valid data And(int, <lambda>),\n\tfunction error'],
+    [
+        And(int, lambda x: x > 1),
+        -12,
+        'Not valid data And(int, <lambda>),\n\tfunction error'
+    ],
     [Or(int, None), '12', 'Not valid data Or'],
     [{OptionalKey('key'): 'value'}, {'key2': 'value2'}, 'Missing keys: key2'],
     [{'test': And(int, lambda x: x > 1)}, {'test': -666}, 'From key="test"'],
     [{'test': Or(int, None)}, {'test': 'None'}, 'From key="test"'],
     [{'test': int}, {'test': '666'}, 'From key="test"'],
     [{'test': [str]}, {'test': ['1', 2, '3']}, 'From key="test"'],
-    [[str], [1, '2', 3], 'current value 1 (int) is not str\ncurrent value 3 (int) is not str'],
+    [
+        [str],
+        [1, '2', 3],
+        'current value 1 (int) is not str\ncurrent value 3 (int) is not str'
+    ],
 ]
 VALIDATOR_DATA_ASSERT = [
     [[int], False, [], []],
