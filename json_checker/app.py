@@ -2,7 +2,7 @@
 
 import logging
 
-from json_checker.checkers import BaseChecker, _is_func, _format_data, _format_error_message, validators, ABCCheckerBase
+from json_checker.checkers import ABCCheckerBase, Validator
 from json_checker.exceptions import CheckerError
 
 
@@ -26,57 +26,6 @@ class Report:
 
     def add_or_rise(self, error_message, exception):
         raise NotImplementedError
-
-
-class Validator(BaseChecker):
-
-    def validate(self, data):
-        if self.expected_data == data:
-            return
-        # elif _is_iter(self.expected_data):
-        #     list_checker = ListChecker(self.expected_data, self.soft)
-        #     return list_checker.validate(data)
-        # elif _is_dict(self.expected_data):
-        #     dict_checker = DictChecker(
-        #         data=self.expected_data,
-        #         soft=self.soft,
-        #         ignore_extra_keys=self.ignore_extra_keys
-        #     )
-        #     return dict_checker.validate(data)
-
-        cls_checker = validators.get(type(self.expected_data))
-
-        if cls_checker:
-            checker = cls_checker(
-                data=self.expected_data,
-                soft=self.soft,
-                ignore_extra_keys=self.ignore_extra_keys
-            )
-            checker.validate(data)
-        # elif _is_class(self.expected_data):
-        #     return self.expected_data.validate(data)
-        # elif _is_type(self.expected_data):
-        #     type_checker = TypeChecker(self.expected_data, self.soft)
-        #     try:
-        #         result = type_checker.validate(data)
-        #     except TypeError as e:
-        #         result = e.__str__()
-        #     if result:
-        #         return result
-        elif _is_func(self.expected_data):
-            func = self.expected_data
-            try:
-                if not func(data):
-                    return 'function error'
-            except TypeError as e:
-                message = _format_data(func) + ' %s' % e.__str__()
-                return 'function error %s' % message
-        # TODO need check this validation
-        # elif self.expected_data is None:
-        #     if self.expected_data != data:
-        #         return _format_error_message(self.expected_data, data)
-        elif self.expected_data != data:
-            return _format_error_message(self.expected_data, data)
 
 
 class Checker(ABCCheckerBase):
