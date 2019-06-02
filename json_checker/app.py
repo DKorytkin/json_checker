@@ -40,6 +40,7 @@ class Checker(ABCCheckerBase):
         self.ignore_extra_keys = ignore_extra_keys
         self.soft = soft
         self.result = None
+        self.report = Report(self.soft)
 
     def __str__(self):
         if callable(self.expected_data):

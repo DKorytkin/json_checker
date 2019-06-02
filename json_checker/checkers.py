@@ -25,18 +25,6 @@ def _is_dict(data):
     return isinstance(data, dict)
 
 
-def _is_class(data):
-    return issubclass(data.__class__, (Or, And))
-
-
-# def _is_type(data):
-#     return issubclass(type(data), type)
-
-
-def _is_func(data):
-    return callable(data)
-
-
 def _is_optional(data):
     return issubclass(data.__class__, OptionalKey)
 
@@ -89,11 +77,12 @@ class ABCCheckerBase(with_metaclass(abc.ABCMeta, object)):
 
 class BaseChecker(ABCCheckerBase):
 
-    def __init__(self, data, soft, ignore_extra_keys=False):
+    def __init__(self, data, soft, ignore_extra_keys=False, report=None):
         self.expected_data = data
         self.soft = soft
         self.ignore_extra_keys = ignore_extra_keys
         self.errors = []
+        self.report = report
 
     def __str__(self):
         return '<%s expected=%s>' % (
@@ -345,16 +334,7 @@ class Validator(BaseChecker):
     def validate(self, data):
         if self.expected_data == data:
             return
-        # elif _is_iter(self.expected_data):
-        #     list_checker = ListChecker(self.expected_data, self.soft)
-        #     return list_checker.validate(data)
-        # elif _is_dict(self.expected_data):
-        #     dict_checker = DictChecker(
-        #         data=self.expected_data,
-        #         soft=self.soft,
-        #         ignore_extra_keys=self.ignore_extra_keys
-        #     )
-        #     return dict_checker.validate(data)
+
         validate_method = getattr(self.expected_data, 'validate', None)
         if validate_method:
             return validate_method(data)
@@ -364,7 +344,8 @@ class Validator(BaseChecker):
             checker = cls_checker(
                 data=self.expected_data,
                 soft=self.soft,
-                ignore_extra_keys=self.ignore_extra_keys
+                ignore_extra_keys=self.ignore_extra_keys,
+                report=self.report,
             )
             return checker.validate(data)
 
@@ -376,22 +357,6 @@ class Validator(BaseChecker):
             except TypeError as e:
                 message = _format_data(func) + ' %s' % e.__str__()
                 return 'function error %s' % message
-
-        # elif _is_type(self.expected_data):
-        #     type_checker = TypeChecker(self.expected_data, self.soft)
-        #     try:
-        #         result = type_checker.validate(data)
-        #     except TypeError as e:
-        #         result = e.__str__()
-        #     if result:
-        #         return result
-
-        # TODO need check this validation
-        # elif self.expected_data is None:
-        #     if self.expected_data != data:
-        #         return _format_error_message(self.expected_data, data)
-        # elif self.expected_data != data:
-        #     return _format_error_message(self.expected_data, data)
 
 
 class Validators:
@@ -407,10 +372,7 @@ class Validators:
         return self.__str__()
 
     def get(self, type_checker):
-        # if _is_class(type_checker):
-        #     return type_checker # return instance
-        # #  TODO if OR, AND class need return type_checker, need fix
-        return self._validators.get(type_checker)  # return class
+        return self._validators.get(type_checker)
 
     def register(self, type_checker, class_validator):
         self._validators[type_checker] = class_validator
@@ -431,5 +393,3 @@ validators.register(int, TypeChecker)
 validators.register(str, TypeChecker)
 validators.register(type, TypeChecker)
 validators.register(dict, DictChecker)
-# validators.register(Or, Or)
-# validators.register(And, And)
