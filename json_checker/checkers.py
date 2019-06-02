@@ -96,10 +96,13 @@ class BaseChecker(ABCCheckerBase):
         self.errors = []
 
     def __str__(self):
-        return '%s(%s)' % (
+        return '<%s expected=%s>' % (
             self.__class__.__name__,
             _format_data(self.expected_data)
         )
+
+    def __repr__(self):
+        return self.__str__()
 
     def validate(self, data):
         pass
@@ -159,8 +162,13 @@ class TypeChecker(BaseChecker):
 
     @validation_logger
     def validate(self, current_data):
-        if not isinstance(current_data, self.expected_data):
+        if (not isinstance(self.expected_data, type)) and current_data != self.expected_data:
             self.errors = (self.expected_data, current_data)
+
+        elif not isinstance(current_data, self.expected_data):
+            self.errors = (self.expected_data, current_data)
+
+        if self.errors:
             if self.soft:
                 return self._format_errors()
             raise TypeCheckerError(self._format_errors())
@@ -227,6 +235,9 @@ class Or(ABCCheckerBase):
             self.__class__.__name__,
             ', '.join([_format_data(e) for e in self.expected_data])
         )
+
+    def __repr__(self):
+        return self.__str__()
 
     def _format_data(self):
         return tuple(_format_data(d) for d in self.expected_data)
@@ -344,9 +355,11 @@ class Validator(BaseChecker):
         #         ignore_extra_keys=self.ignore_extra_keys
         #     )
         #     return dict_checker.validate(data)
+        validate_method = getattr(self.expected_data, 'validate', None)
+        if validate_method:
+            return validate_method(data)
 
         cls_checker = validators.get(type(self.expected_data))
-
         if cls_checker:
             checker = cls_checker(
                 data=self.expected_data,
@@ -354,8 +367,16 @@ class Validator(BaseChecker):
                 ignore_extra_keys=self.ignore_extra_keys
             )
             return checker.validate(data)
-        # elif _is_class(self.expected_data):
-        #     return self.expected_data.validate(data)
+
+        elif callable(self.expected_data):  # TODO need fix, callable(object) -> True
+            func = self.expected_data
+            try:
+                if not func(data):
+                    return 'function error'
+            except TypeError as e:
+                message = _format_data(func) + ' %s' % e.__str__()
+                return 'function error %s' % message
+
         # elif _is_type(self.expected_data):
         #     type_checker = TypeChecker(self.expected_data, self.soft)
         #     try:
@@ -364,20 +385,13 @@ class Validator(BaseChecker):
         #         result = e.__str__()
         #     if result:
         #         return result
-        elif _is_func(self.expected_data):
-            func = self.expected_data
-            try:
-                if not func(data):
-                    return 'function error'
-            except TypeError as e:
-                message = _format_data(func) + ' %s' % e.__str__()
-                return 'function error %s' % message
+
         # TODO need check this validation
         # elif self.expected_data is None:
         #     if self.expected_data != data:
         #         return _format_error_message(self.expected_data, data)
-        elif self.expected_data != data:
-            return _format_error_message(self.expected_data, data)
+        # elif self.expected_data != data:
+        #     return _format_error_message(self.expected_data, data)
 
 
 class Validators:
@@ -393,10 +407,10 @@ class Validators:
         return self.__str__()
 
     def get(self, type_checker):
-        if _is_class(type_checker):
-            return type_checker
-        #  TODO if OR, AND class need return type_checker
-        return self._validators.get(type_checker)
+        # if _is_class(type_checker):
+        #     return type_checker # return instance
+        # #  TODO if OR, AND class need return type_checker, need fix
+        return self._validators.get(type_checker)  # return class
 
     def register(self, type_checker, class_validator):
         self._validators[type_checker] = class_validator
@@ -411,6 +425,8 @@ validators.register(list, ListChecker)
 validators.register(tuple, ListChecker)
 validators.register(set, ListChecker)
 validators.register(frozenset, ListChecker)
+validators.register(object, TypeChecker)
+validators.register(type(None), TypeChecker)
 validators.register(int, TypeChecker)
 validators.register(str, TypeChecker)
 validators.register(type, TypeChecker)
