@@ -6,11 +6,11 @@ from setuptools import setup, find_packages
 
 setup(
     name="json_checker",
-    version='1.2.3',
+    version='1.3.0',
     author='Denis Korytkin',
     author_email='dkorytkin@gmail.com',
-    description='Simple data validation library',
-    keywords=['Json checker', 'API testing', 'requests testing'],
+    description='Simple schema validation library',
+    keywords=['Json checker', 'API testing', 'requests testing', 'json schema validation'],
     url='https://github.com/DKorytkin/json_checker',
     platforms=['linux'],
     packages=find_packages(),
