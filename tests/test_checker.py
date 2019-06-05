@@ -2,7 +2,6 @@
 import pytest
 
 from json_checker import Checker, And, Or, OptionalKey
-from json_checker.app import Report
 from json_checker.exceptions import (
     CheckerError,
     TypeCheckerError,
@@ -128,7 +127,6 @@ def test_create_checker_instance_with_default_param():
     assert c.soft is False
     assert c.ignore_extra_keys is False
     assert c.result is None
-    assert isinstance(c.report, Report)
 
 
 def test_create_checker_instance_with_custom_param():
@@ -137,7 +135,6 @@ def test_create_checker_instance_with_custom_param():
     assert c.soft is True
     assert c.ignore_extra_keys is True
     assert c.result is None
-    assert isinstance(c.report, Report)
 
 
 def test_checker_string_with_callable_data():

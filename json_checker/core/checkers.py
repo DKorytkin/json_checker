@@ -77,12 +77,11 @@ class ABCCheckerBase(with_metaclass(abc.ABCMeta, object)):
 
 class BaseChecker(ABCCheckerBase):
 
-    def __init__(self, data, soft, ignore_extra_keys=False, report=None):
+    def __init__(self, data, soft, ignore_extra_keys=False):
         self.expected_data = data
         self.soft = soft
         self.ignore_extra_keys = ignore_extra_keys
         self.errors = []
-        self.report = report
 
     def __str__(self):
         return '<%s expected=%s>' % (
@@ -94,7 +93,7 @@ class BaseChecker(ABCCheckerBase):
         return self.__str__()
 
     def validate(self, data):
-        pass
+        raise NotImplementedError
 
     def _format_errors(self):
         if self.errors:
@@ -345,7 +344,6 @@ class Validator(BaseChecker):
                 data=self.expected_data,
                 soft=self.soft,
                 ignore_extra_keys=self.ignore_extra_keys,
-                report=self.report,
             )
             return checker.validate(data)
 

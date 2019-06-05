@@ -2,36 +2,11 @@
 
 import logging
 
-from json_checker.checkers import ABCCheckerBase, Validator
+from json_checker.core.checkers import ABCCheckerBase, Validator
 from json_checker.exceptions import CheckerError
 
 
 log = logging.getLogger(__name__)
-
-
-class Report:
-
-    def __init__(self, soft=True):
-        self.soft = soft
-        self.errors = []
-
-    def __str__(self):
-        return '<Report soft={} {}>'.format(self.soft, self.errors)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def add(self, error_message):
-        self.errors.append(error_message)
-
-    def add_or_rise(self, error_message, exception):
-        if self.soft:
-            self.add(error_message)
-            return True
-        raise exception
-
-    def build(self):
-        raise NotImplementedError
 
 
 class Checker(ABCCheckerBase):
@@ -46,7 +21,6 @@ class Checker(ABCCheckerBase):
         self.ignore_extra_keys = ignore_extra_keys
         self.soft = soft
         self.result = None
-        self.report = Report(self.soft)
 
     def __str__(self):
         if callable(self.expected_data):
@@ -70,7 +44,7 @@ class Checker(ABCCheckerBase):
         checker = Validator(
             data=self.expected_data,
             soft=self.soft,
-            ignore_extra_keys=self.ignore_extra_keys
+            ignore_extra_keys=self.ignore_extra_keys,
         )
         self.result = checker.validate(data)
         if self.result:

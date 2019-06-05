@@ -1,6 +1,6 @@
 import pytest
 
-from json_checker.app import Report
+from json_checker.core.reports import Report
 
 
 def test_create_instance_with_default_params():
@@ -41,6 +41,24 @@ def test_add_or_rise_error_to_report():
     r = Report(soft=False)
     with pytest.raises(KeyboardInterrupt):
         r.add_or_rise('test message', KeyboardInterrupt)
+
+
+def test_reset_report():
+    r = Report()
+    r.add('test error')
+    assert r.errors == ['test error']
+    r.reset()
+    assert r.errors == []
+
+
+def test_rebuilding_report():
+    r = Report()
+    r.add('test error')
+    assert r.errors == ['test error']
+    assert r.soft is True
+    r.rebuilding(soft=False)
+    assert r.errors == []
+    assert r.soft is False
 
 
 def test_build_errors():

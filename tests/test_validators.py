@@ -10,7 +10,7 @@ from json_checker import (
     DictCheckerError,
     MissKeyCheckerError
 )
-from json_checker.checkers import (
+from json_checker.core.checkers import (
     ListChecker,
     TypeChecker,
     DictChecker,
