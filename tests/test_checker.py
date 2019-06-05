@@ -2,6 +2,7 @@
 import pytest
 
 from json_checker import Checker, And, Or, OptionalKey
+from json_checker.app import Report
 from json_checker.exceptions import (
     CheckerError,
     TypeCheckerError,
@@ -119,6 +120,34 @@ def _get_expected_exception(ex_object, soft=False):
         return TypeCheckerError
     else:
         return CheckerError
+
+
+def test_create_checker_instance_with_default_param():
+    c = Checker(int)
+    assert c.expected_data is int
+    assert c.soft is False
+    assert c.ignore_extra_keys is False
+    assert c.result is None
+    assert isinstance(c.report, Report)
+
+
+def test_create_checker_instance_with_custom_param():
+    c = Checker(int, True, True)
+    assert c.expected_data is int
+    assert c.soft is True
+    assert c.ignore_extra_keys is True
+    assert c.result is None
+    assert isinstance(c.report, Report)
+
+
+def test_checker_string_with_callable_data():
+    c = Checker(lambda x: x is True)
+    assert str(c) == '<lambda>'
+
+
+def test_checker_string():
+    c = Checker(int)
+    assert str(c) == 'int'
 
 
 @pytest.mark.parametrize('soft', [True, False])

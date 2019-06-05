@@ -84,6 +84,47 @@ OPERATOR_OR_DICT_DATA = [
 ]
 
 
+def test_create_or_instance():
+    o = Or(int, str)
+    assert o.expected_data == (int, str)
+    assert o.result is None
+
+
+def test_create_or_instance_with_empty_param():
+    o = Or()
+    assert o.expected_data == tuple()
+    assert o.result is None
+
+
+def test_or_operator_string():
+    assert str(Or(int, None)) == 'Or(int, None)'
+
+
+def test_create_and_instance():
+    a = And(int, str)
+    assert a.expected_data == (int, str)
+    assert a.result is None
+
+
+def test_create_and_instance_with_empty_param():
+    a = And()
+    assert a.expected_data == tuple()
+    assert a.result is None
+
+
+def test_and_operator_string():
+    assert str(And(int, None)) == 'And(int, None)'
+
+
+def test_create_optional_key_instance():
+    o = OptionalKey('test_key')
+    assert o.expected_data == 'test_key'
+
+
+def test_optional_key_string():
+    assert str(OptionalKey('test_key')) == 'OptionalKey(test_key)'
+
+
 @pytest.mark.parametrize('data', OR_DATA)
 def test_operator_or(data):
     or_data, current_data, expected_result = data

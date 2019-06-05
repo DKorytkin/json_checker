@@ -12,19 +12,25 @@ log = logging.getLogger(__name__)
 class Report:
 
     def __init__(self, soft=True):
-        self._soft = soft
-        self._errors = []
+        self.soft = soft
+        self.errors = []
 
     def __str__(self):
-        return '<Report soft={} {}>'.format(self._soft, self._errors)
+        return '<Report soft={} {}>'.format(self.soft, self.errors)
 
     def __repr__(self):
         return self.__str__()
 
     def add(self, error_message):
-        self._errors.append(error_message)
+        self.errors.append(error_message)
 
     def add_or_rise(self, error_message, exception):
+        if self.soft:
+            self.add(error_message)
+            return True
+        raise exception
+
+    def build(self):
         raise NotImplementedError
 
 
