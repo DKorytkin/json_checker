@@ -2,18 +2,19 @@
 import pytest
 
 from json_checker import (
-    And,
-    Or,
-    OptionalKey,
     TypeCheckerError,
     ListCheckerError,
     DictCheckerError,
     MissKeyCheckerError
 )
 from json_checker.core.checkers import (
+    And,
+    Or,
+    OptionalKey,
     ListChecker,
     TypeChecker,
     DictChecker,
+    Validators,
     Validator,
 )
 
@@ -37,6 +38,8 @@ TYPE_DATA_NEGATIVE = [
     [int, []],
 ]
 LIST_DATA_POSITIVE = [
+    [[1, 2], False, [1, 2]],
+    [[1, 2], True, [1, 2]],
     [[int], False, [1, 2, 3]],
     [[int], True, [1, 2, 3]],
     [[int], False, [True]]
@@ -49,12 +52,16 @@ LIST_DATA_NEGATIVE = [
     [[int], [1, '2', '3']],
     [[int], [1, 2, None]],
     [[bool], [1, 2]],
+    [['1', '2'], [1, 2]],
+    [[str, int], [1, '2']],
     [[int], []],
     [[str], [1, '2', '3']],
 
 ]
 DICT_DATA_POSITIVE = [
     [{'test': int}, True, {'test': 666}, None],
+    [{'test': 666}, True, {'test': 666}, None],
+    [{'test': 666}, False, {'test': 666}, None],
     [{'test': int}, False, {'test': 666}, None],
     [{'test': [int]}, True, {'test': [1, 2, 3]}, None],
     [{'test': [int]}, False, {'test': [1, 2, 3]}, None],
@@ -236,3 +243,44 @@ def test_validator_miss_key(ex_data, cu_data):
     checker = DictChecker(ex_data, soft=False, ignore_extra_keys=False)
     with pytest.raises(MissKeyCheckerError):
         checker.validate(cu_data)
+
+
+def test_validators_create_instance():
+    v = Validators()
+    assert v._validators == {}
+
+
+def test_empty_validators_string():
+    assert str(Validators()) == '<Validators []>'
+
+
+def test_validators_string():
+    v = Validators()
+    v._validators['test'] = 'test_validators_string'
+    assert str(v) == "<Validators ['test']>"
+
+
+def test_add_validators():
+    v = Validators()
+    v.register('test_add_validators', int)
+    assert v._validators == {'test_add_validators': int}
+
+
+def test_get_validator():
+    v = Validators()
+    v._validators = {'test_add_validators': int}
+    assert v.get('test_add_validators') == int
+
+
+def test_remove_validator():
+    v = Validators()
+    v._validators = {'test_add_validators': int}
+    v.remove('test_add_validators')
+    assert v._validators == {}
+
+
+def test_remove_not_exist_validator():
+    v = Validators()
+    v._validators = {'test_add_validators': int}
+    v.remove('test_add_validators12')
+    assert v._validators == {'test_add_validators': int}

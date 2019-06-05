@@ -6,7 +6,10 @@ from json_checker import Checker, And, Or, OptionalKey
 
 OR_DATA = [
     [(int, None), 1, None],
-    [(int, None), None, None]
+    [(int, ), 1, None],
+    [(int, lambda x: x == 1), 1, None],
+    [(int, None), None, None],
+    [({'key1': int}, {'key2': str}), {'key2': 'test'}, None]
 ]
 AND_DATA = [
     [(int, lambda x: x > 0), 1, None],

@@ -104,10 +104,7 @@ class ListChecker(BaseChecker):
 
     def _append_errors_or_raise(self, result):
         if result and self.soft:
-            if _is_iter(result):
-                self.errors.extend(result)
-            else:
-                self.errors.append(result)
+            self.errors.append(result)
         elif result and not self.soft:
             raise ListCheckerError(result)
 
@@ -165,8 +162,6 @@ class TypeChecker(BaseChecker):
 class DictChecker(BaseChecker):
 
     def _append_errors_or_raise(self, key, result, exception):
-        if result and isinstance(result, list):
-            result = '\n\t'.join(result)
         if result and self.soft:
             self.errors.append('From key="%s": %s' % (key, result))
         elif result and not self.soft:
@@ -226,9 +221,6 @@ class Or(ABCCheckerBase):
 
     def __repr__(self):
         return self.__str__()
-
-    def _format_data(self):
-        return tuple(_format_data(d) for d in self.expected_data)
 
     def _error_message(self, errors):
         return 'Not valid data %s,\n\t%s' % (self, ',\t'.join(errors))
@@ -347,7 +339,7 @@ class Validator(BaseChecker):
             )
             return checker.validate(data)
 
-        elif callable(self.expected_data):  # TODO need fix, callable(object) -> True
+        elif callable(self.expected_data):
             func = self.expected_data
             try:
                 if not func(data):

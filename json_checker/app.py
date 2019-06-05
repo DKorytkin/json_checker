@@ -30,11 +30,7 @@ class Checker(ABCCheckerBase):
         return res
 
     def _format_errors(self):
-        if isinstance(self.result, list):
-            message = '\n'.join(self.result)
-        else:
-            message = self.result
-        return '\n%s' % message
+        return '\n%s' % self.result
 
     def validate(self, data):
         log.debug('Checker settings: ignore_extra_keys=%s, soft=%s' % (
