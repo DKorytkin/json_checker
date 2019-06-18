@@ -4,6 +4,7 @@ import abc
 import functools
 import logging
 
+from collections import OrderedDict
 from six import with_metaclass
 
 from json_checker.exceptions import (
@@ -17,16 +18,12 @@ from json_checker.exceptions import (
 log = logging.getLogger(__name__)
 
 
-def _is_iter(data):
-    return isinstance(data, (list, tuple, set, frozenset))
-
-
 def _is_dict(data):
     return isinstance(data, dict)
 
 
 def _is_optional(data):
-    return issubclass(data.__class__, OptionalKey)
+    return isinstance(data, OptionalKey)
 
 
 def _format_data(data):
@@ -110,7 +107,7 @@ class ListChecker(BaseChecker):
 
     @validation_logger
     def validate(self, current_data):
-        if not _is_iter(current_data):
+        if not isinstance(current_data, (list, tuple, set, frozenset)):
             error = _format_error_message(self.expected_data, current_data)
             self._append_errors_or_raise(error)
             return self._format_errors()
@@ -233,8 +230,8 @@ class Or(ABCCheckerBase):
 
     def _is_all_dicts(self, current_data):
         return bool(
-            _is_dict(current_data) and
-            all(_is_dict(d) for d in self.expected_data)
+            isinstance(current_data, dict) and
+            all(isinstance(d, dict) for d in self.expected_data)
         )
 
     def _get_need_dict(self, data):
@@ -246,7 +243,7 @@ class Or(ABCCheckerBase):
         current_keys = set(data.keys())
         class_name = self.__class__.__name__
         for d in self.expected_data:
-            if not _is_dict(d):
+            if not isinstance(d, dict):
                 continue
             ex_dict_keys = d.keys()
             if ex_dict_keys == data.keys():
@@ -308,7 +305,7 @@ class OptionalKey(object):
     """
     from not required keys to dict
     example:
-    {'key1': 1, OptionalKey('key2'):2}
+    {'key1': 1, OptionalKey('key2'): 2}
     if current data have key 'key2' mast be checked else pass
     """
 
@@ -322,6 +319,21 @@ class OptionalKey(object):
 
 class Validator(BaseChecker):
 
+    _validators = {
+        list: ListChecker,
+        tuple: ListChecker,
+        set: ListChecker,
+        frozenset: ListChecker,
+        object: TypeChecker,
+        type(None): TypeChecker,
+        None: TypeChecker,
+        int: TypeChecker,
+        str: TypeChecker,
+        type: TypeChecker,
+        dict: DictChecker,
+        OrderedDict: DictChecker,
+    }
+
     def validate(self, data):
         if self.expected_data == data:
             return
@@ -330,7 +342,7 @@ class Validator(BaseChecker):
         if validate_method:
             return validate_method(data)
 
-        cls_checker = validators.get(type(self.expected_data))
+        cls_checker = self._validators.get(type(self.expected_data))
         if cls_checker:
             checker = cls_checker(
                 data=self.expected_data,
@@ -347,39 +359,3 @@ class Validator(BaseChecker):
             except TypeError as e:
                 message = _format_data(func) + ' %s' % e.__str__()
                 return 'function error %s' % message
-
-
-class Validators:
-
-    def __init__(self):
-        self._validators = {}
-
-    def __str__(self):
-        keys = list(self._validators.keys())
-        return '<Validators {}>'.format(keys)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def get(self, type_checker):
-        return self._validators.get(type_checker)
-
-    def register(self, type_checker, class_validator):
-        self._validators[type_checker] = class_validator
-
-    def remove(self, type_checker):
-        if type_checker in self._validators:
-            del self._validators[type_checker]
-
-
-validators = Validators()
-validators.register(list, ListChecker)
-validators.register(tuple, ListChecker)
-validators.register(set, ListChecker)
-validators.register(frozenset, ListChecker)
-validators.register(object, TypeChecker)
-validators.register(type(None), TypeChecker)
-validators.register(int, TypeChecker)
-validators.register(str, TypeChecker)
-validators.register(type, TypeChecker)
-validators.register(dict, DictChecker)

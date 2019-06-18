@@ -6,11 +6,11 @@ class Report:
         self.soft = soft
         self.errors = []
 
-    def __str__(self):
+    def __repr__(self):
         return '<Report soft={} {}>'.format(self.soft, self.errors)
 
-    def __repr__(self):
-        return self.__str__()
+    def __str__(self):
+        return self.__repr__()
 
     def reset(self):
         self.errors = []

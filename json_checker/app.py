@@ -22,12 +22,15 @@ class Checker(ABCCheckerBase):
         self.soft = soft
         self.result = None
 
-    def __str__(self):
+    def __repr__(self):
         if callable(self.expected_data):
             res = self.expected_data.__name__
         else:
             res = str(self.expected_data)
         return res
+
+    def __str__(self):
+        return self.__repr__()
 
     def _format_errors(self):
         return '\n%s' % self.result

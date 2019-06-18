@@ -14,7 +14,6 @@ from json_checker.core.checkers import (
     ListChecker,
     TypeChecker,
     DictChecker,
-    Validators,
     Validator,
 )
 
@@ -238,49 +237,15 @@ def test_validator_positive_message(data):
     assert expected_result in validator.validate(current_data)
 
 
+def test_exist_validators():
+    v1 = Validator([1, 2], True)
+    v2 = Validator([1, 2], True)
+    assert v1._validators and v2._validators
+    assert v1._validators == v2._validators
+
+
 @pytest.mark.parametrize(('ex_data', 'cu_data'), VALIDATOR_DATA_MISS_KEY)
 def test_validator_miss_key(ex_data, cu_data):
     checker = DictChecker(ex_data, soft=False, ignore_extra_keys=False)
     with pytest.raises(MissKeyCheckerError):
         checker.validate(cu_data)
-
-
-def test_validators_create_instance():
-    v = Validators()
-    assert v._validators == {}
-
-
-def test_empty_validators_string():
-    assert str(Validators()) == '<Validators []>'
-
-
-def test_validators_string():
-    v = Validators()
-    v._validators['test'] = 'test_validators_string'
-    assert str(v) == "<Validators ['test']>"
-
-
-def test_add_validators():
-    v = Validators()
-    v.register('test_add_validators', int)
-    assert v._validators == {'test_add_validators': int}
-
-
-def test_get_validator():
-    v = Validators()
-    v._validators = {'test_add_validators': int}
-    assert v.get('test_add_validators') == int
-
-
-def test_remove_validator():
-    v = Validators()
-    v._validators = {'test_add_validators': int}
-    v.remove('test_add_validators')
-    assert v._validators == {}
-
-
-def test_remove_not_exist_validator():
-    v = Validators()
-    v._validators = {'test_add_validators': int}
-    v.remove('test_add_validators12')
-    assert v._validators == {'test_add_validators': int}
