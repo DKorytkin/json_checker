@@ -2,15 +2,19 @@ json_checker
 ===============================================================================
 
 .. image:: https://travis-ci.org/DKorytkin/json_checker.svg?branch=master
+    :alt: Build
     :target: https://travis-ci.org/DKorytkin/json_checker
 
 .. image:: https://codecov.io/gh/DKorytkin/json_checker/branch/master/graph/badge.svg
+    :alt: Cov
     :target: https://codecov.io/gh/DKorytkin/json_checker
 
 .. image:: https://img.shields.io/badge/python-2.7%2C%20%203.4%2C%203.5%2C%203.6-blue.svg
+    :alt: Python versions
     :target: https://pypi.python.org/pypi/json_checker
 
-.. image:: https://badge.fury.io/py/json_checker.svg
+.. image:: https://img.shields.io/pypi/v/json_checker.svg   
+    :alt: PyPI
     :target: https://pypi.python.org/pypi/json_checker
     
 **json_checker** is a library for validating Python data structures,
