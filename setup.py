@@ -17,9 +17,9 @@ setup(
     license='MIT license',
     py_modules=[
         'json_checker.app',
-        'json_checker.core.checkers'
-        'json_checker.core.exceptions'
-        'json_checker.core.reports'
+        'json_checker.core.checkers',
+        'json_checker.core.exceptions',
+        'json_checker.core.reports',
     ],
     install_requires=['six>=1.10.0'],
     python_requires='>=2.7',
