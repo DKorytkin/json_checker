@@ -2,7 +2,7 @@
 import pytest
 
 from json_checker import Checker, And, Or, OptionalKey
-from json_checker.exceptions import (
+from json_checker.core.exceptions import (
     CheckerError,
     TypeCheckerError,
     ListCheckerError,

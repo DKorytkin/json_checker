@@ -3,7 +3,7 @@
 import logging
 
 from json_checker.core.checkers import ABCCheckerBase, Validator
-from json_checker.exceptions import CheckerError
+from json_checker.core.exceptions import CheckerError
 
 
 log = logging.getLogger(__name__)

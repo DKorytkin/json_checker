@@ -7,7 +7,7 @@ import logging
 from collections import OrderedDict
 from six import with_metaclass
 
-from json_checker.exceptions import (
+from json_checker.core.exceptions import (
     DictCheckerError,
     ListCheckerError,
     MissKeyCheckerError,
@@ -145,7 +145,10 @@ class TypeChecker(BaseChecker):
 
     def _format_errors(self):
         if self.errors:
-            return _format_error_message(*self.errors)
+            message = _format_error_message(*self.errors)
+            if self.soft:
+                return message
+            raise TypeCheckerError(message)
 
     @validation_logger
     def validate(self, current_data):
@@ -155,10 +158,7 @@ class TypeChecker(BaseChecker):
         elif not isinstance(current_data, self.expected_data):
             self.errors = (self.expected_data, current_data)
 
-        if self.errors:
-            if self.soft:
-                return self._format_errors()
-            raise TypeCheckerError(self._format_errors())
+        return self._format_errors()
 
 
 class DictChecker(BaseChecker):
