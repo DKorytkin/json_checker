@@ -18,10 +18,6 @@ from json_checker.exceptions import (
 log = logging.getLogger(__name__)
 
 
-def _is_dict(data):
-    return isinstance(data, dict)
-
-
 def _is_optional(data):
     return isinstance(data, OptionalKey)
 
@@ -111,12 +107,15 @@ class ListChecker(BaseChecker):
             error = _format_error_message(self.expected_data, current_data)
             self._append_errors_or_raise(error)
             return self._format_errors()
+
         if self.expected_data == current_data:
             return
+
         if not current_data:
             error = _format_error_message(self.expected_data, current_data)
             self._append_errors_or_raise(error)
             return self._format_errors()
+
         if len(self.expected_data) == len(current_data):
             for ex, cu in list(zip(self.expected_data, current_data)):
                 checker = Validator(ex, self.soft)
@@ -126,6 +125,12 @@ class ListChecker(BaseChecker):
                     result = e.__str__().replace('\n', '')
                 self._append_errors_or_raise(result)
             return self._format_errors()
+
+        if len(self.expected_data) > 1:
+            error = _format_error_message(self.expected_data, current_data)
+            self._append_errors_or_raise(error)
+            return self._format_errors()
+
         for checker in [Validator(d, self.soft) for d in self.expected_data]:
             for data in current_data:
                 try:
@@ -158,43 +163,48 @@ class TypeChecker(BaseChecker):
 
 class DictChecker(BaseChecker):
 
-    def _append_errors_or_raise(self, key, result, exception):
-        if result and self.soft:
-            self.errors.append('From key="%s": %s' % (key, result))
-        elif result and not self.soft:
-            raise exception('From key="%s": %s' % (key, result))
+    def _append_errors_or_raise(self, message, exception):
+        if self.soft:
+            self.errors.append(message)
+        elif not self.soft:
+            raise exception(message)
 
     @validation_logger
     def validate(self, data):
         if data == self.expected_data:
             return
+
         assert isinstance(data, dict), _format_error_message('dict', data)
         validated_keys = []
         current_keys = list(data.keys())
         for key, value in self.expected_data.items():
             if _is_optional(key) and key.expected_data not in current_keys:
                 continue
+
             ex_key = key if not _is_optional(key) else key.expected_data
             if ex_key not in current_keys:
-                message = 'Missing key'
-                self._append_errors_or_raise(key, message, MissKeyCheckerError)
+                message = 'Missing keys in current response: %s' % ex_key
+                self._append_errors_or_raise(message, MissKeyCheckerError)
                 continue
+
             current_value = data.get(ex_key)
             checker = Validator(value, self.soft, self.ignore_extra_keys)
             try:
                 result = checker.validate(current_value)
             except TypeCheckerError as e:
                 result = e.__str__().replace('\n', '')
+
             validated_keys.append(ex_key)
-            self._append_errors_or_raise(key, result, DictCheckerError)
+            if result:
+                message = 'From key="%s": %s' % (key, result)
+                self._append_errors_or_raise(message, DictCheckerError)
+
         if not self.ignore_extra_keys:
-            miss_keys = set(current_keys) ^ set(validated_keys)
-            message = 'Missing keys: %s' % ', '.join(miss_keys)
-            if miss_keys and self.soft:
-                log.debug('Added miss keys to errors')
-                self.errors.append(message)
-            elif miss_keys and not self.soft:
-                raise MissKeyCheckerError(message)
+            miss_expected_keys = list(set(current_keys) - set(validated_keys))
+            if miss_expected_keys:
+                message = 'Missing keys in expected schema: %s' % ', '.join(miss_expected_keys)
+                self._append_errors_or_raise(message, MissKeyCheckerError)
+
         return self._format_errors()
 
 
@@ -225,6 +235,7 @@ class Or(ABCCheckerBase):
     def _format_errors(self):
         if not self.result:
             return
+
         if len(self.result) == len(self.expected_data):
             return self._error_message(self.result)
 
@@ -245,21 +256,25 @@ class Or(ABCCheckerBase):
         for d in self.expected_data:
             if not isinstance(d, dict):
                 continue
+
             ex_dict_keys = d.keys()
             if ex_dict_keys == data.keys():
                 log.debug('%s selected equals dict=%s' % (class_name, repr(d)))
                 return d
+
             ex_keys = set()
             active_optional_count = 0
             for k in ex_dict_keys:
                 if _is_optional(k) and k.expected_data not in current_keys:
                     log.debug('Skip %s' % k)
                     continue
+
                 if _is_optional(k):
                     log.debug('Active %s' % k)
                     active_optional_count += 1
                     k = k.expected_data
                 ex_keys.add(k)
+
             intersection_count = len(ex_keys.intersection(current_keys))
             coincide_ratio = intersection_count + active_optional_count
             dicts[coincide_ratio] = d
@@ -313,23 +328,26 @@ class OptionalKey(object):
         self.expected_data = data
         log.debug(self.__str__())
 
-    def __str__(self):
+    def __repr__(self):
         return 'OptionalKey({})'.format(self.expected_data)
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class Validator(BaseChecker):
 
     _validators = {
-        list: ListChecker,
-        tuple: ListChecker,
-        set: ListChecker,
-        frozenset: ListChecker,
         object: TypeChecker,
+        type: TypeChecker,
         type(None): TypeChecker,
         None: TypeChecker,
         int: TypeChecker,
         str: TypeChecker,
-        type: TypeChecker,
+        list: ListChecker,
+        tuple: ListChecker,
+        set: ListChecker,
+        frozenset: ListChecker,
         dict: DictChecker,
         OrderedDict: DictChecker,
     }

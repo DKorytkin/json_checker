@@ -130,12 +130,17 @@ VALIDATOR_DATA_POSITIVE_MESSAGE = [
         -12,
         'Not valid data And(int, <lambda>),\n\tfunction error'
     ],
-    [Or(int, None), '12', 'Not valid data Or'],
-    [{OptionalKey('key'): 'value'}, {'key2': 'value2'}, 'Missing keys: key2'],
-    [{'test': And(int, lambda x: x > 1)}, {'test': -666}, 'From key="test"'],
-    [{'test': Or(int, None)}, {'test': 'None'}, 'From key="test"'],
-    [{'test': int}, {'test': '666'}, 'From key="test"'],
-    [{'test': [str]}, {'test': ['1', 2, '3']}, 'From key="test"'],
+    [Or(int, None), '12', "Not valid data Or(int, None),\n\tcurrent value '12' (str) is not int,\tcurrent value '12' (str) is not None"],
+    [{OptionalKey('key'): 'value'}, {'key2': 'value2'}, 'Missing keys in expected schema: key2'],
+    [{'key': 'value'}, {'key2': 'value2'}, 'Missing keys in current response: key\nMissing keys in expected schema: key2'],
+    [{}, {'key2': 'value2'}, 'Missing keys in expected schema: key2'],
+    [{'key': 'value'}, {'key': 'value', 'key2': 'value2'}, 'Missing keys in expected schema: key2'],
+    [{'key2': 'value2'}, {}, 'Missing keys in current response: key2'],
+    [{'key': 'value', 'key2': 'value2'}, {'key': 'value'}, 'Missing keys in current response: key2'],
+    [{'test': And(int, lambda x: x > 1)}, {'test': -666}, 'From key="test": Not valid data And(int, <lambda>),\n\tfunction error'],
+    [{'test': Or(int, None)}, {'test': 'None'}, 'From key="test": Not valid data Or(int, None),\n\tcurrent value \'None\' (str) is not int,\tcurrent value \'None\' (str) is not None'],
+    [{'test': int}, {'test': '666'}, "From key=\"test\": current value '666' (str) is not int"],
+    [{'test': [str]}, {'test': ['1', 2, '3']}, 'From key="test": current value 2 (int) is not str'],
     [
         [str],
         [1, '2', 3],
@@ -234,7 +239,7 @@ def test_validator_some_dicts():
 def test_validator_positive_message(data):
     validator_data, current_data, expected_result = data
     validator = Validator(validator_data, soft=True, ignore_extra_keys=False)
-    assert expected_result in validator.validate(current_data)
+    assert expected_result == validator.validate(current_data)
 
 
 def test_exist_validators():
