@@ -27,7 +27,7 @@ class Checker(ABCCheckerBase):
             res = self.expected_data.__name__
         else:
             res = str(self.expected_data)
-        return res
+        return '<Checker %s>' % res
 
     def __str__(self):
         return self.__repr__()
