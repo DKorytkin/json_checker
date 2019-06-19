@@ -152,7 +152,8 @@ class TypeChecker(BaseChecker):
 
     @validation_logger
     def validate(self, current_data):
-        if (not isinstance(self.expected_data, type)) and current_data != self.expected_data:
+        if (not isinstance(self.expected_data, type)) and \
+                current_data != self.expected_data:
             self.errors = (self.expected_data, current_data)
 
         elif not isinstance(current_data, self.expected_data):
@@ -202,7 +203,10 @@ class DictChecker(BaseChecker):
         if not self.ignore_extra_keys:
             miss_expected_keys = list(set(current_keys) - set(validated_keys))
             if miss_expected_keys:
-                message = 'Missing keys in expected schema: %s' % ', '.join(miss_expected_keys)
+                message = (
+                    'Missing keys in expected schema: '
+                    '%s' % ', '.join(miss_expected_keys)
+                )
                 self._append_errors_or_raise(message, MissKeyCheckerError)
 
         return self._format_errors()
