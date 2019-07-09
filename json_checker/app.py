@@ -2,50 +2,29 @@
 
 import logging
 
-from json_checker.core.checkers import ABCCheckerBase, Validator
 from json_checker.core.exceptions import CheckerError
+from json_checker.core.checkers import Base, Validator
+from json_checker.core.reports import Report
 
 
 log = logging.getLogger(__name__)
 
 
-class Checker(ABCCheckerBase):
-
-    def __init__(self, expected_data, soft=False, ignore_extra_keys=False):
-        """
-        :param expected_data:
-        :param bool soft:
-        :param bool ignore_extra_keys:
-        """
-        self.expected_data = expected_data
-        self.ignore_extra_keys = ignore_extra_keys
-        self.soft = soft
-        self.result = None
-
-    def __repr__(self):
-        if callable(self.expected_data):
-            res = self.expected_data.__name__
-        else:
-            res = str(self.expected_data)
-        return '<Checker %s>' % res
-
-    def __str__(self):
-        return self.__repr__()
-
-    def _format_errors(self):
-        return '\n%s' % self.result
+class Checker(Base):
 
     def validate(self, data):
         log.debug('Checker settings: ignore_extra_keys=%s, soft=%s' % (
             self.ignore_extra_keys,
             self.soft
         ))
+        report = Report(self.soft)
         checker = Validator(
-            data=self.expected_data,
+            expected_data=self.expected_data,
             soft=self.soft,
+            report=report,
             ignore_extra_keys=self.ignore_extra_keys,
         )
-        self.result = checker.validate(data)
-        if self.result:
-            raise CheckerError(self._format_errors())
+        checker.validate(data)
+        if report.has_errors():
+            raise CheckerError(report)
         return data

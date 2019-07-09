@@ -5,6 +5,10 @@ class CheckerError(Exception):
     pass
 
 
+class FunctionCheckerError(CheckerError):
+    pass
+
+
 class TypeCheckerError(CheckerError):
     pass
 

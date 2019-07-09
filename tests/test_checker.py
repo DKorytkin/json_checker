@@ -4,14 +4,48 @@ import pytest
 from json_checker import Checker, And, Or, OptionalKey
 from json_checker.core.exceptions import (
     CheckerError,
-    TypeCheckerError,
-    ListCheckerError,
     DictCheckerError,
     MissKeyCheckerError
 )
 
 
-CHECKER_DATA_POSITIVE = [
+def test_create_checker_instance_with_default_param():
+    c = Checker(int)
+    assert c.expected_data is int
+    assert c.soft is False
+    assert c.ignore_extra_keys is False
+
+
+def test_create_checker_instance_with_custom_param():
+    c = Checker(int, True, True)
+    assert c.expected_data is int
+    assert c.soft is True
+    assert c.ignore_extra_keys is True
+
+
+def test_checker_string_with_callable_data():
+    c = Checker(lambda x: x is True)
+    assert str(c) == '<Checker soft=False expected=<lambda>>'
+
+
+def test_checker_string():
+    c = Checker(int)
+    assert str(c) == '<Checker soft=False expected=int>'
+
+
+@pytest.mark.parametrize('test_data, expected_result', [
+    [1, '<Checker soft=True expected=1 (int)>'],
+    ['test', "<Checker soft=True expected='test' (str)>"],
+    [[1, 2, 3], '<Checker soft=True expected=[1, 2, 3] (list)>'],
+    [{'key': 1}, "<Checker soft=True expected={'key': 1} (dict)>"],
+    [lambda x: x == 1, '<Checker soft=True expected=<lambda>>']])
+def test_repr_checker_class(test_data, expected_result):
+    c = Checker(test_data, soft=True)
+    assert c.__str__() == expected_result
+
+
+@pytest.mark.parametrize('soft', [True, False])
+@pytest.mark.parametrize(('expected', 'current'), [
     [int, 1],
     [1, 1],
     ['test', 'test'],
@@ -53,9 +87,14 @@ CHECKER_DATA_POSITIVE = [
     [{'key1': And(list, lambda x: len(x) < 99)}, {'key1': list(range(98))}],
     [{'key1': And(list, lambda x: len(x) < 99)}, {'key1': list([])}],
     [{'key1': And(int, bool)}, {'key1': True}],
-    [{'key1': And(str, lambda x: x in ('t', 'e', 's', 't'))}, {'key1': 's'}],
-]
-CHECKER_DATA_NEGATIVE = [
+    [{'key1': And(str, lambda x: x in ('t', 'e', 's', 't'))}, {'key1': 's'}]])
+def test_checker_positive(expected, current, soft):
+    assert Checker(expected, soft).validate(current) == current
+
+
+@pytest.mark.skip('need change test logic')
+@pytest.mark.parametrize('soft', [True, False])
+@pytest.mark.parametrize(('expected', 'current'), [
     [int, '5'],
     [1, '1'],
     ['test', True],
@@ -87,74 +126,7 @@ CHECKER_DATA_NEGATIVE = [
     [{'key1': And(int, lambda x: 0 < x < 99)}, {'key1': 0}],
     [{'key1': And(list, lambda x: len(x) < 99)}, {'key1': list(range(99))}],
     [{'key1': And(int, bool)}, {'key1': None}],
-    [{'key1': And(str, lambda x: x in ('t', 'e', 's', 't'))}, {'key1': '1'}],
-]
-CHECKER_DATA_ASSERT = [
-    [{'test': bool}, []],
-    [{'test': bool}, 'test'],
-    [{'test': {'test': bool}}, {'test': 'test'}],
-]
-CHECKER_DATA_MISS_KEY = [
-    [{'test': bool}, {}],
-    [{'key1': bool, 'key2': int}, {}],
-    [{}, {'test': 'test'}],
-    [{'test': {'test': bool}}, {'test': {}}],
-    [{'k1': int}, {'k1': 12, 'k2': 'test'}]
-]
-CHECKER_CLASS_DATA = [
-    [Checker, 1, '<Checker 1>'],
-    [Checker, 'test', '<Checker test>'],
-    [Checker, [1, 2, 3], '<Checker [1, 2, 3]>'],
-    [Checker, {'key': 1}, "<Checker {'key': 1}>"],
-    [Checker, lambda x: x == 1, '<Checker <lambda>>']
-]
-
-
-def _get_expected_exception(ex_object, soft=False):
-    if isinstance(ex_object, (list, tuple, set, frozenset)) and not soft:
-        return ListCheckerError
-    elif isinstance(ex_object, dict) and not soft:
-        return DictCheckerError
-    elif issubclass(type(ex_object), type) and not soft:
-        return TypeCheckerError
-    else:
-        return CheckerError
-
-
-def test_create_checker_instance_with_default_param():
-    c = Checker(int)
-    assert c.expected_data is int
-    assert c.soft is False
-    assert c.ignore_extra_keys is False
-    assert c.result is None
-
-
-def test_create_checker_instance_with_custom_param():
-    c = Checker(int, True, True)
-    assert c.expected_data is int
-    assert c.soft is True
-    assert c.ignore_extra_keys is True
-    assert c.result is None
-
-
-def test_checker_string_with_callable_data():
-    c = Checker(lambda x: x is True)
-    assert str(c) == '<Checker <lambda>>'
-
-
-def test_checker_string():
-    c = Checker(int)
-    assert str(c) == '<Checker int>'
-
-
-@pytest.mark.parametrize('soft', [True, False])
-@pytest.mark.parametrize(('expected', 'current'), CHECKER_DATA_POSITIVE)
-def test_checker_positive(expected, current, soft):
-    assert Checker(expected, soft).validate(current) == current
-
-
-@pytest.mark.parametrize('soft', [True, False])
-@pytest.mark.parametrize(('expected', 'current'), CHECKER_DATA_NEGATIVE)
+    [{'key1': And(str, lambda x: x in ('t', 'e', 's', 't'))}, {'key1': '1'}]])
 def test_checker_negative(expected, current, soft):
     with pytest.raises(_get_expected_exception(expected, soft)):
         Checker(expected, soft).validate(current)
@@ -173,26 +145,32 @@ def test_checker_list_dicts_soft():
 
 
 @pytest.mark.parametrize('soft', [True, False])
-@pytest.mark.parametrize(('expected', 'current'), CHECKER_DATA_ASSERT)
+@pytest.mark.parametrize(('expected', 'current'), [
+    [{'test': bool}, []],
+    [{'test': bool}, 'test'],
+    [{'test': {'test': bool}}, {'test': 'test'}]])
 def test_checker_assert(expected, current, soft):
-    with pytest.raises(AssertionError):
+    with pytest.raises(CheckerError):
         Checker(expected, soft).validate(current)
 
 
-@pytest.mark.parametrize('data', CHECKER_CLASS_DATA)
-def test_repr_checker_class(data):
-    data_class, test_data, expected_result = data
-    c = data_class(test_data, soft=True)
-    assert c.__str__() == expected_result
-
-
-@pytest.mark.parametrize(('expected', 'current'), CHECKER_DATA_MISS_KEY)
-def test_miss_keys(expected, current):
-    with pytest.raises(MissKeyCheckerError):
+@pytest.mark.parametrize('expected, current, exp_exception', [
+    [{'test': bool}, {}, MissKeyCheckerError],
+    [{'key1': bool, 'key2': int}, {}, MissKeyCheckerError],
+    [{}, {'test': 'test'}, MissKeyCheckerError],
+    [{'test': {'test': bool}}, {'test': {}}, DictCheckerError],
+    [{'k1': int}, {'k1': 12, 'k2': 'test'}, MissKeyCheckerError]])
+def test_miss_keys(expected, current, exp_exception):
+    with pytest.raises(exp_exception):
         Checker(expected).validate(current)
 
 
-@pytest.mark.parametrize(('expected', 'current'), CHECKER_DATA_MISS_KEY)
+@pytest.mark.parametrize('expected, current', [
+    [{'test': bool}, {}],
+    [{'key1': bool, 'key2': int}, {}],
+    [{}, {'test': 'test'}],
+    [{'test': {'test': bool}}, {'test': {}}],
+    [{'k1': int}, {'k1': 12, 'k2': 'test'}]])
 def test_miss_keys_soft(expected, current):
     with pytest.raises(CheckerError):
         Checker(expected, soft=True).validate(current)

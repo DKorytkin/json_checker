@@ -17,12 +17,18 @@ def test_create_instance_with_custom_params():
 
 def test_report_instance_string():
     r = Report()
-    assert str(r) == '<Report soft=True []>'
+    assert str(r) == ''
 
 
 def test_report_instance_string_with_custom_param():
     r = Report(soft=False)
-    assert str(r) == '<Report soft=False []>'
+    assert str(r) == ''
+
+
+def test_report_instance_string_with_errors():
+    r = Report(soft=False)
+    r.errors = ['error #1', 'error #2']
+    assert str(r) == 'error #1\nerror #2'
 
 
 def test_add_error_to_report():
@@ -41,27 +47,3 @@ def test_add_or_rise_error_to_report():
     r = Report(soft=False)
     with pytest.raises(KeyboardInterrupt):
         r.add_or_rise('test message', KeyboardInterrupt)
-
-
-def test_reset_report():
-    r = Report()
-    r.add('test error')
-    assert r.errors == ['test error']
-    r.reset()
-    assert r.errors == []
-
-
-def test_rebuilding_report():
-    r = Report()
-    r.add('test error')
-    assert r.errors == ['test error']
-    assert r.soft is True
-    r.rebuilding(soft=False)
-    assert r.errors == []
-    assert r.soft is False
-
-
-def test_build_errors():
-    r = Report()
-    with pytest.raises(NotImplementedError):
-        r.build()
