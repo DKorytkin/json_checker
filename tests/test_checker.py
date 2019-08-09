@@ -4,6 +4,8 @@ import pytest
 from json_checker import Checker, And, Or, OptionalKey
 from json_checker.core.exceptions import (
     CheckerError,
+    TypeCheckerError,
+    ListCheckerError,
     DictCheckerError,
     MissKeyCheckerError
 )
@@ -92,8 +94,6 @@ def test_checker_positive(expected, current, soft):
     assert Checker(expected, soft).validate(current) == current
 
 
-@pytest.mark.skip('need change test logic')
-@pytest.mark.parametrize('soft', [True, False])
 @pytest.mark.parametrize(('expected', 'current'), [
     [int, '5'],
     [1, '1'],
@@ -127,9 +127,47 @@ def test_checker_positive(expected, current, soft):
     [{'key1': And(list, lambda x: len(x) < 99)}, {'key1': list(range(99))}],
     [{'key1': And(int, bool)}, {'key1': None}],
     [{'key1': And(str, lambda x: x in ('t', 'e', 's', 't'))}, {'key1': '1'}]])
-def test_checker_negative(expected, current, soft):
-    with pytest.raises(_get_expected_exception(expected, soft)):
-        Checker(expected, soft).validate(current)
+def test_soft_checker_with_errors(expected, current):
+    with pytest.raises(CheckerError):
+        Checker(expected, soft=True).validate(current)
+
+
+@pytest.mark.parametrize('expected, current, exception', (
+    [int, '5', TypeCheckerError],
+    [1, '1', TypeCheckerError],
+    ['test', True, TypeCheckerError],
+    [bool, 1, TypeCheckerError],
+    [str, True, TypeCheckerError],
+    [dict, 12, TypeCheckerError],
+    [list, {'key': 1}, TypeCheckerError],
+    [tuple, True, TypeCheckerError],
+    [frozenset, 'test', TypeCheckerError],
+    [set, [], TypeCheckerError],
+    [[int], ['test'], TypeCheckerError],
+    [[int], [], ListCheckerError],
+    [[int, str], [], ListCheckerError],
+    [[int], 122, ListCheckerError],
+    [[bool], [1, 2, 3], TypeCheckerError],
+    [[str], list(range(1000)), TypeCheckerError],
+    [[int], ['1'] * 1000, TypeCheckerError],
+    [[bool], [1, False], TypeCheckerError],
+    [{'key1': int}, {'key1': '1'}, DictCheckerError],
+    [{'key1': int, 'key2': str, 'key3': bool},
+     {'key1': 666, 'key2': 123, 'key3': True}, DictCheckerError],
+    [{'key1': {'key2': str}}, {'key1': {'key2': 123}}, DictCheckerError],
+    [{'key1': {'key2': {'key3': bool}}}, {'key1': {'key2': {'key3': 1}}}, DictCheckerError],
+    [{OptionalKey('key1'): int, 'key2': str}, {'key2': 123}, DictCheckerError],
+    [{OptionalKey('key1'): int, 'key2': str}, {'key1': '123', 'key2': 123}, DictCheckerError],
+    [{'key1': Or(int, None)}, {'key1': '123'}, DictCheckerError],
+    [{'key1': Or(int, None)}, {'key1': 'True'}, DictCheckerError],
+    [{'key1': And(int, lambda x: 0 < x < 99)}, {'key1': 99}, DictCheckerError],
+    [{'key1': And(int, lambda x: 0 < x < 99)}, {'key1': 0}, DictCheckerError],
+    [{'key1': And(list, lambda x: len(x) < 99)}, {'key1': list(range(99))}, DictCheckerError],
+    [{'key1': And(int, bool)}, {'key1': None}, DictCheckerError],
+    [{'key1': And(str, lambda x: x in ('t', 'e', 's', 't'))}, {'key1': '1'}, DictCheckerError]))
+def test_checker_with_errors(expected, current, exception):
+    with pytest.raises(exception):
+        Checker(expected, soft=False).validate(current)
 
 
 def test_checker_list_dicts_hard():

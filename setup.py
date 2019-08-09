@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="json_checker",
-    version='1.3.1',
+    version='2.0.0',
     author='Denis Korytkin',
     author_email='dkorytkin@gmail.com',
     description='Simple schema validation library',

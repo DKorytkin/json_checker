@@ -369,6 +369,22 @@ class And(Or):
     example:
     And(int, lambda x: 0 < x < 99)
     current data mast be checked, all conditions returned True
+    Examples:
+    >>> from json_checker import Checker, CheckerError
+
+    # make simple expected schema
+    >>> EXPECTED_SCHEMA = {
+    >>>     "id": And(int, lambda x: x > 0),
+    >>>     "name": str,
+    >>> }
+
+    >>> checker = Checker(EXPECTED_SCHEMA)
+
+    >>> checker.validate({"id": 1, "name": "test #1"})
+    >>> {"id": 1, "name": "test #1"}
+
+    >>> checker.validate({"id": -1, "name": "test #1"})
+    >>> raise CheckerError  # with error
     """
 
     def validate(self, current_data):
@@ -402,6 +418,11 @@ class Validator(BaseValidator):
     }
 
     def validate(self, current_data):
+        """
+
+        :param any current_data:
+        :return: None or Report
+        """
         if self.expected_data == current_data:
             return
 
