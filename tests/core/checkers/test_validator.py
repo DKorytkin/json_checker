@@ -76,12 +76,14 @@ def test_validator_some_dicts():
         (
             And(int, lambda x: x > 1),
             -12,
-            "Not valid data: current value -12 (int) is not And(int, <lambda>) (And)",
+            "Not valid data: "
+            "current value -12 (int) is not And(int, <lambda>) (And)",
         ),
         (
             Or(int, None),
             "12",
-            "Not valid data: current value '12' (str) is not Or(int, None) (Or)",
+            "Not valid data: "
+            "current value '12' (str) is not Or(int, None) (Or)",
         ),
         (
             {OptionalKey("key"): "value"},
@@ -91,7 +93,8 @@ def test_validator_some_dicts():
         (
             {"key": "value"},
             {"key2": "value2"},
-            "Missing keys in current response: key\nMissing keys in expected schema: key2",
+            "Missing keys in current response: "
+            "key\nMissing keys in expected schema: key2",
         ),
         ({}, {"key2": "value2"}, "Missing keys in expected schema: key2"),
         (
@@ -109,13 +112,15 @@ def test_validator_some_dicts():
             {"test": And(int, lambda x: x > 1)},
             {"test": -666},
             'From key="test": \n'
-            "\tNot valid data: current value -666 (int) is not And(int, <lambda>) (And)",
+            "\tNot valid data: "
+            "current value -666 (int) is not And(int, <lambda>) (And)",
         ),
         (
             {"test": Or(int, None)},
             {"test": "None"},
             'From key="test": \n'
-            "\tNot valid data: current value 'None' (str) is not Or(int, None) (Or)",
+            "\tNot valid data: "
+            "current value 'None' (str) is not Or(int, None) (Or)",
         ),
         (
             {"test": int},
@@ -130,7 +135,8 @@ def test_validator_some_dicts():
         (
             [str],
             [1, "2", 3],
-            "current value 1 (int) is not str\ncurrent value 3 (int) is not str",
+            "current value 1 (int) is not str\n"
+            "current value 3 (int) is not str",
         ),
     ),
 )

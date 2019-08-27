@@ -33,17 +33,20 @@ def test_operator_and(and_data, current_data, expected_result):
         [
             (int, bool),
             0,
-            "Not valid data: current value 0 (int) is not And(int, bool) (And)",
+            "Not valid data: "
+            "current value 0 (int) is not And(int, bool) (And)",
         ],
         [
             (int, lambda x: x > 0),
             0,
-            "Not valid data: current value 0 (int) is not And(int, <lambda>) (And)",
+            "Not valid data: "
+            "current value 0 (int) is not And(int, <lambda>) (And)",
         ],
         [
             (int, lambda x: x > 0),
             "1",
-            "Not valid data: current value '1' (str) is not And(int, <lambda>) (And)",
+            "Not valid data: "
+            "current value '1' (str) is not And(int, <lambda>) (And)",
         ],
     ],
 )

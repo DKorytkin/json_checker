@@ -167,19 +167,25 @@ class ListChecker(BaseValidator):
         # One to one with all current items
         >>> soft_checker = ListChecker([int], soft=True, report=soft_report)
         >>> soft_checker.validate([1, 2, 3]) >> None
-        >>> soft_checker.validate([1, '2', '3']) >> Report # object with 2 error messages
+        # object with 2 error messages
+        >>> soft_checker.validate([1, '2', '3']) >> Report
 
         # One to one with all current items
         >>> hard_checker = ListChecker([int], soft=False, report=hard_report)
         >>> hard_checker.validate([1, 2, 3]) >> None
-        >>> hard_checker.validate([1, '2', '3']) >> raise TypeCheckerError # with first error
+        # with first error
+        >>> hard_checker.validate([1, '2', '3']) >> raise TypeCheckerError
 
         # One to one with all current items by position
-        >>> hard_checker = ListChecker([1, 2, 3], soft=False, report=hard_report)
+        >>> hard_checker = ListChecker(
+        >>>     [1, 2, 3], soft=False, report=hard_report
+        >>> )
         >>> hard_checker.validate([1, 2, 3]) >> None
 
         # One to one with all current items by position
-        >>> hard_checker = ListChecker([int, int, str], soft=False, report=hard_report)
+        >>> hard_checker = ListChecker(
+        >>>     [int, int, str], soft=False, report=hard_report
+        >>> )
         >>> hard_checker.validate([1, 2, '3']) >> None
 
         Must be used into `json_checker` only
@@ -223,28 +229,30 @@ class DictChecker(BaseValidator):
         Examples:
         >>> from json_checker.core.reports import Report
 
-        # make simple expected schema
+        # make simple expected schema and data for that
         >>> EXPECTED_SCHEMA = {
         >>>     "id": int,
         >>>     "name": str,
         >>>     "items": [int]
         >>> }
+        >>> right_data = {"id": 1, "name": "#1", "items": [1, 2, 3]}
+        >>> broken_data = {"id": "212", "name": "#1", "items": [1, '2', '3']}
 
-        >>> soft_checker = DictChecker(EXPECTED_SCHEMA, soft=True, report=Report(soft=True))
-        >>> soft_checker.validate({"id": 1, "name": "test #1", "items": [1, 2, 3]}) >> None
-        >>> soft_checker.validate({
-        >>>     "id": "1593977292735101516",
-        >>>     "name": "test #1",
-        >>>     "items": [1, '2', '3']
-        >>> }) >> Report  # with 3 errors, not valid `id`, `items`
+        # Soft validation:
+        >>> soft_checker = DictChecker(
+        >>>     EXPECTED_SCHEMA, soft=True, report=Report(soft=True)
+        >>> )
+        >>> soft_checker.validate(right_data) >> None
+        # with 3 errors, not valid `id`, `items`
+        >>> soft_checker.validate(broken_data) >> Report
 
-        >>> hard_checker = DictChecker(EXPECTED_SCHEMA, soft=False, report=Report(soft=False))
-        >>> hard_checker.validate({"id": 1, "name": "test #1", "items": [1, 2, 3]}) >> None
-        >>> hard_checker.validate({
-        >>>     "id": "1:sfafasf3r1sfa",
-        >>>     "name": "test #1",
-        >>>     "items": [1, '2', '3']
-        >>> }) >> raise DictCheckerError  # with first error, not valid `id`
+        # Hard validation:
+        >>> hard_checker = DictChecker(
+        >>>     EXPECTED_SCHEMA, soft=False, report=Report(soft=False)
+        >>> )
+        >>> hard_checker.validate(right_data) >> None
+        # with first error, not valid `id`
+        >>> hard_checker.validate(broken_data) >> raise DictCheckerError
 
         Must be used into `json_checker` only
         :param dict | OrderedDict current_data:
@@ -304,7 +312,8 @@ class OptionalKey(object):
     # if current data have key 'key2' mast be checked else pass
     >>> checker.validate({'key1': 1}) >> {'key1': 1}
     >>> checker.validate({'key1': 1, 'key2': '2'}) >> {'key1': 1, 'key2': '2'}
-    >>> checker.validate({'key1': 1, 'key2': '2'}) >> raise TypeCheckerError  # with error message
+    # Raise error with message
+    >>> checker.validate({'key1': 1, 'key2': '2'}) >> raise TypeCheckerError
     """
 
     def __init__(self, data):
@@ -363,7 +372,7 @@ class Or(BaseOperator):
         return results[min_error]
 
 
-class And(Or):
+class And(BaseOperator):
     """
     from validations instance an conditions
     example:
@@ -383,8 +392,7 @@ class And(Or):
     >>> checker.validate({"id": 1, "name": "test #1"})
     >>> {"id": 1, "name": "test #1"}
 
-    >>> checker.validate({"id": -1, "name": "test #1"})
-    >>> raise CheckerError  # with error
+    >>> checker.validate({"id": -1, "name": "test #1"}) >> CheckerError
     """
 
     def validate(self, current_data):
@@ -428,7 +436,8 @@ class Validator(BaseValidator):
 
         validate_method = getattr(self.expected_data, 'validate', None)
         if validate_method:
-            # TODO operators must returned report all time or make some for update report
+            # TODO operators must returned report all time or
+            #  make some for update report
             report = validate_method(current_data)
             if report and report.has_errors():
                 self.report.errors.extend(report.errors)
