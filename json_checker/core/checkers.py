@@ -104,7 +104,11 @@ class BaseOperator(six.with_metaclass(abc.ABCMeta, object)):
 class BaseValidator(Base):
 
     def __init__(self, expected_data, soft, report, ignore_extra_keys=False):
-        super().__init__(expected_data, soft, ignore_extra_keys)
+        super(BaseValidator, self).__init__(
+            expected_data=expected_data,
+            soft=soft,
+            ignore_extra_keys=ignore_extra_keys
+        )
         self.report = report
 
     def _errors_or_none(self):
