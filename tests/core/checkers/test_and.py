@@ -6,13 +6,11 @@ from json_checker.core.checkers import And
 def test_create_and_instance():
     a = And(int, str)
     assert a.expected_data == (int, str)
-    assert a.result is None
 
 
 def test_create_and_instance_with_empty_param():
     a = And()
     assert a.expected_data == tuple()
-    assert a.result is None
 
 
 def test_and_operator_string():
@@ -20,11 +18,14 @@ def test_and_operator_string():
 
 
 @pytest.mark.parametrize(
-    "and_data, current_data, expected_result",
-    [[(int, lambda x: x > 0), 1, None], [(int, bool), True, None]],
+    "schema, current_data",
+    [
+        [(int, lambda x: x > 0), 1],
+        [(int, bool), True]
+    ],
 )
-def test_operator_and(and_data, current_data, expected_result):
-    assert And(*and_data).validate(current_data) == expected_result
+def test_operator_and(schema, current_data):
+    assert And(*schema).validate(current_data) == ""
 
 
 @pytest.mark.parametrize(

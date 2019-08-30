@@ -19,9 +19,9 @@ from json_checker.core.reports import Report
 )
 def test_list_checker_positive(list_data, soft, current_data):
     list_checker = ListChecker(
-        expected_data=list_data, soft=soft, report=Report(soft=soft)
+        expected_data=list_data, report=Report(soft=soft)
     )
-    assert list_checker.validate(current_data) is None
+    assert list_checker.validate(current_data) == ""
 
 
 @pytest.mark.parametrize(
@@ -30,18 +30,20 @@ def test_list_checker_positive(list_data, soft, current_data):
         (
             [int],
             [1, "2", "3"],
-            "current value '2' (str) is not int\n"
-            "current value '3' (str) is not int",
+            [
+                "current value '2' (str) is not int",
+                "current value '3' (str) is not int"
+            ],
         ),
-        ([int], [1, 2, None], "current value None is not int"),
+        ([int], [1, 2, None], ["current value None is not int"]),
     ),
 )
 def test_list_checker_positive_message(list_data, current_data, ex_message):
     soft = True
     list_checker = ListChecker(
-        expected_data=list_data, soft=soft, report=Report(soft=soft)
+        expected_data=list_data, report=Report(soft=soft)
     )
-    assert ex_message in list_checker.validate(current_data)
+    assert list_checker.validate(current_data) == ex_message
 
 
 @pytest.mark.parametrize(
@@ -61,7 +63,7 @@ def test_list_checker_positive_message(list_data, current_data, ex_message):
 def test_list_checker_negative(list_data, current_data, ex_exception):
     soft = False
     list_checker = ListChecker(
-        expected_data=list_data, soft=soft, report=Report(soft=soft)
+        expected_data=list_data, report=Report(soft=soft)
     )
     with pytest.raises(ex_exception):
         list_checker.validate(current_data)

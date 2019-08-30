@@ -39,11 +39,11 @@ def test_add_error_to_report():
 
 def test_soft_add_or_rise_error_to_report():
     r = Report(soft=True)
-    r.add_or_rise("test message", Exception)
+    r.add_or_raise("test message", Exception)
     assert r.errors == ["test message"]
 
 
 def test_add_or_rise_error_to_report():
     r = Report(soft=False)
     with pytest.raises(KeyboardInterrupt):
-        r.add_or_rise("test message", KeyboardInterrupt)
+        r.add_or_raise("test message", KeyboardInterrupt)

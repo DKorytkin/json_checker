@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 class Report:
@@ -17,21 +16,34 @@ class Report:
         return len(self.errors)
 
     def __eq__(self, other):
-        return self.__str__() == other
+        if isinstance(other, list):
+            other = "\n".join(other)
+        return str(self) == str(other)
+
+    def __ne__(self, other):
+        if isinstance(other, list):
+            other = "\n".join(other)
+        return str(self) != str(other)
 
     def __add__(self, other):
-        return self.__str__() + str(other)
+        self.add(str(other))
+        return self
 
     def __contains__(self, item):
-        return item in self.__str__()
+        return str(item) in self.errors
 
     def has_errors(self):
         return bool(self.errors)
 
+    def merge(self, report):
+        self.errors.extend(report.errors)
+        return True
+
     def add(self, error_message):
         self.errors.append(error_message)
+        return True
 
-    def add_or_rise(self, error_message, exception):
+    def add_or_raise(self, error_message, exception):
         if self.soft:
             self.add(error_message)
             return True

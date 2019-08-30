@@ -4,6 +4,7 @@ from json_checker.core.checkers import And, Or, OptionalKey
 from json_checker.core.exceptions import (
     CheckerError,
     DictCheckerError,
+    FunctionCheckerError,
     ListCheckerError,
     MissKeyCheckerError,
     TypeCheckerError,
@@ -16,6 +17,7 @@ __all__ = [
     'Or',
     'OptionalKey',
     'CheckerError',
+    'FunctionCheckerError',
     'TypeCheckerError',
     'ListCheckerError',
     'DictCheckerError',

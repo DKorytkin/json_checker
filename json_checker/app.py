@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import logging
 
 from json_checker.core.exceptions import CheckerError
@@ -20,7 +18,6 @@ class Checker(Base):
         report = Report(self.soft)
         checker = Validator(
             expected_data=self.expected_data,
-            soft=self.soft,
             report=report,
             ignore_extra_keys=self.ignore_extra_keys,
         )

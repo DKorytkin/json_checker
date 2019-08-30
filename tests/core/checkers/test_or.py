@@ -23,13 +23,11 @@ def test_filtered_by_type(data, _type, expected):
 def test_create_or_instance():
     o = Or(int, str)
     assert o.expected_data == (int, str)
-    assert o.result is None
 
 
 def test_create_or_instance_with_empty_param():
     o = Or()
     assert o.expected_data == tuple()
-    assert o.result is None
 
 
 def test_or_operator_string():
@@ -39,15 +37,15 @@ def test_or_operator_string():
 @pytest.mark.parametrize(
     "or_data, current_data, expected_result",
     [
-        [(int, None), 1, None],
-        [(int,), 1, None],
-        [(int, lambda x: x == 1), 1, None],
-        [(int, None), None, None],
-        [({"key1": int}, {"key2": str}), {"key2": "test"}, None],
-        [({"key1": 1}, [{"key": str}]), [{"key": "test"}], None],
-        [([int, str], [int, int]), [1, 2], None],
-        [({"key1": str}, [int]), [1, 2, 3], None],
-        [({"key1": str}, int), 1, None],
+        [(int, None), 1, ""],
+        [(int,), 1, ""],
+        [(int, lambda x: x == 1), 1, ""],
+        [(int, None), None, ""],
+        [({"key1": int}, {"key2": str}), {"key2": "test"}, ""],
+        [({"key1": 1}, [{"key": str}]), [{"key": "test"}], ""],
+        [([int, str], [int, int]), [1, 2], ""],
+        [({"key1": str}, [int]), [1, 2, 3], ""],
+        [({"key1": str}, int), 1, ""],
     ],
 )
 def test_operator_or(or_data, current_data, expected_result):

@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import abc
 import logging
-import six
-import types
+from types import FunctionType
+from typing import Any, Iterable, Iterator, Callable
 
 from collections import OrderedDict
 
@@ -20,7 +18,7 @@ from json_checker.core.reports import Report
 log = logging.getLogger(__name__)
 
 
-def _format_data(data):
+def _format_data(data: Any) -> str:
     if callable(data):
         return data.__name__
     elif data is None:
@@ -28,14 +26,14 @@ def _format_data(data):
     return '{} ({})'.format(repr(data), type(data).__name__)
 
 
-def _format_error_message(expected_data, current_data):
+def _format_error_message(expected_data: Any, current_data: Any) -> str:
     return 'current value %s is not %s' % (
         _format_data(current_data),
         _format_data(expected_data)
     )
 
 
-def filtered_items(expected_data, current_keys):
+def filtered_items(expected_data: dict, current_keys: list) -> Iterator:
     for k, v in expected_data.items():
         if isinstance(k, OptionalKey) and k.expected_data not in current_keys:
             log.debug('Skip %s' % k)
@@ -47,16 +45,20 @@ def filtered_items(expected_data, current_keys):
         yield (k, v)
 
 
-def filtered_by_type(expected_data, _type):
-
+def filtered_by_type(expected_data: Iterable, _type: Callable) -> Iterator:
     for data in expected_data:
-        if isinstance(data, (_type, types.FunctionType)) or data is _type:
+        if isinstance(data, (_type, FunctionType)) or data is _type:
             yield data
 
 
-class Base(six.with_metaclass(abc.ABCMeta, object)):
+class Base(metaclass=abc.ABCMeta):
 
-    def __init__(self, expected_data, soft=False, ignore_extra_keys=False):
+    def __init__(
+        self,
+        expected_data: Any,
+        soft: bool = False,
+        ignore_extra_keys: bool = False,
+    ):
         """
         :param any expected_data:
         :param bool soft: False by default
@@ -81,11 +83,10 @@ class Base(six.with_metaclass(abc.ABCMeta, object)):
         pass
 
 
-class BaseOperator(six.with_metaclass(abc.ABCMeta, object)):
+class BaseOperator(metaclass=abc.ABCMeta):
 
     def __init__(self, *data):
         self.expected_data = data
-        self.result = None
 
     def __str__(self):
         return self.__repr__()
@@ -103,18 +104,24 @@ class BaseOperator(six.with_metaclass(abc.ABCMeta, object)):
 
 class BaseValidator(Base):
 
-    def __init__(self, expected_data, soft, report, ignore_extra_keys=False):
+    exception = TypeCheckerError
+
+    def __init__(
+        self,
+        expected_data: Any,
+        report: Report,
+        ignore_extra_keys: bool = False,
+    ):
         super(BaseValidator, self).__init__(
             expected_data=expected_data,
-            soft=soft,
+            soft=report.soft,
             ignore_extra_keys=ignore_extra_keys
         )
         self.report = report
 
-    def _errors_or_none(self):
-        if self.report.has_errors():
-            return self.report
-        return None
+    def add_or_raise(self, message: str) -> Report:
+        self.report.add_or_raise(message, self.exception)
+        return self.report
 
     def validate(self, current_data):
         raise NotImplementedError
@@ -122,44 +129,83 @@ class BaseValidator(Base):
 
 class TypeChecker(BaseValidator):
 
-    def validate(self, current_data):
+    exception = TypeCheckerError
+
+    def validate(self, current_data: Any) -> Report:
         """
         Examples:
         >>> from json_checker.core.reports import Report
 
         # If has not valid data, add to Report.errors
         >>> soft_report = Report(soft=True)
-        >>> checker = TypeChecker(int, soft=True, report=soft_report)
-        >>> checker.validate(123) >> None
-        >>> checker.validate('123') >> Report # object with errors
+        >>> checker = TypeChecker(int, report=soft_report)
+        >>> checker.validate(123)  # Report object without errors
+        >>> checker.validate('123')  # Report object with errors
 
         # If has not valid data, raise TypeCheckerError with message
         >>> hard_report = Report(soft=False)
-        >>> checker = TypeChecker(int, soft=False, report=hard_report)
-        >>> checker.validate(123) >> None
-        >>> checker.validate('123') >> raise TypeCheckerError
+        >>> checker = TypeChecker(int, report=hard_report)
+        >>> checker.validate(123)  # Report # object without errors
+        >>> checker.validate('123')  # raise TypeCheckerError
 
         Must be used into `json_checker` only
         :param str | bool | int | float | type | object | None current_data:
-        :return: Report or None
+        :return: Report
         """
         if (
                 not isinstance(self.expected_data, type) and
                 current_data != self.expected_data
         ):
             error = _format_error_message(self.expected_data, current_data)
-            self.report.add_or_rise(error, TypeCheckerError)
+            self.add_or_raise(error)
 
         elif not isinstance(current_data, self.expected_data):
             error = _format_error_message(self.expected_data, current_data)
-            self.report.add_or_rise(error, TypeCheckerError)
+            self.add_or_raise(error)
+        return self.report
 
-        return self._errors_or_none()
+
+class FunctionChecker(BaseValidator):
+
+    exception = FunctionCheckerError
+
+    def validate(self, current_data: Any) -> Report:
+        """
+        Examples:
+        >>> from json_checker.core.reports import Report
+
+        # If has not valid data, add to Report.errors
+        >>> soft_report = Report(soft=True)
+        >>> checker = FunctionChecker(lambda x: x > 1, report=soft_report)
+        >>> checker.validate(123)  # Report # object without errors
+        >>> checker.validate(1)  # Report # object with errors
+
+        # If has not valid data, raise TypeCheckerError with message
+        >>> hard_report = Report(soft=False)
+        >>> checker = FunctionChecker(lambda x: x > 1, report=hard_report)
+        >>> checker.validate(123)  # Report object without errors
+        >>> checker.validate(1)  # raise FunctionCheckerError
+
+        Must be used into `json_checker` only
+        :param any current_data:
+        :return: Report
+        """
+        # TODO need add tests and docstring
+        func = self.expected_data
+        try:
+            if not func(current_data):
+                self.add_or_raise('function error %s' % _format_data(func))
+        except TypeError as e:
+            # TODO need check???
+            self.add_or_raise(_format_data(func) + ' %s' % e.__str__())
+        return self.report
 
 
 class ListChecker(BaseValidator):
 
-    def validate(self, current_data):
+    exception = ListCheckerError
+
+    def validate(self, current_data: Iterable) -> Report:
         """
         Examples:
         >>> from json_checker.core.reports import Report
@@ -169,35 +215,30 @@ class ListChecker(BaseValidator):
         >>> hard_report = Report(soft=False)
 
         # One to one with all current items
-        >>> soft_checker = ListChecker([int], soft=True, report=soft_report)
-        >>> soft_checker.validate([1, 2, 3]) >> None
-        # object with 2 error messages
-        >>> soft_checker.validate([1, '2', '3']) >> Report
+        >>> soft_checker = ListChecker([int], report=soft_report)
+        >>> soft_checker.validate([1, 2, 3])  # Report object without errors
+        >>> soft_checker.validate([1, '2', '3']) # Report object with 2 errors
 
         # One to one with all current items
-        >>> hard_checker = ListChecker([int], soft=False, report=hard_report)
-        >>> hard_checker.validate([1, 2, 3]) >> None
+        >>> hard_checker = ListChecker([int], report=hard_report)
+        >>> hard_checker.validate([1, 2, 3]) # Report object without errors
         # with first error
-        >>> hard_checker.validate([1, '2', '3']) >> raise TypeCheckerError
+        >>> hard_checker.validate([1, '2', '3'])  # raise TypeCheckerError
 
         # One to one with all current items by position
-        >>> hard_checker = ListChecker(
-        >>>     [1, 2, 3], soft=False, report=hard_report
-        >>> )
-        >>> hard_checker.validate([1, 2, 3]) >> None
+        >>> hard_checker = ListChecker([1, 2, 3], report=hard_report)
+        >>> hard_checker.validate([1, 2, 3])  # Report object without errors
 
         # One to one with all current items by position
-        >>> hard_checker = ListChecker(
-        >>>     [int, int, str], soft=False, report=hard_report
-        >>> )
-        >>> hard_checker.validate([1, 2, '3']) >> None
+        >>> hard_checker = ListChecker([int, int, str], report=hard_report)
+        >>> hard_checker.validate([1, 2, '3'])  # Report object without errors
 
         Must be used into `json_checker` only
         :param list | tuple | set | frozenset current_data:
-        :return: Report or None
+        :return: Report
         """
         if self.expected_data == current_data:
-            return
+            return self.report
 
         if (
             # expected [int], current 123
@@ -210,25 +251,26 @@ class ListChecker(BaseValidator):
             (1 > len(self.expected_data) > 1)
         ):
             error = _format_error_message(self.expected_data, current_data)
-            self.report.add_or_rise(error, ListCheckerError)
-            return self._errors_or_none()
+            return self.add_or_raise(error)
 
         if len(self.expected_data) == len(current_data):
-            for expected, current in list(zip(self.expected_data, current_data)):
-                checker = Validator(expected_data=expected, soft=self.soft, report=self.report)
-                checker.validate(current)
-            return self._errors_or_none()
+            for exp, cur in list(zip(self.expected_data, current_data)):
+                checker = Validator(expected_data=exp, report=self.report)
+                checker.validate(cur)
+            return self.report
 
         expected = self.expected_data[0]
-        checker = Validator(expected_data=expected, soft=self.soft, report=self.report)
+        checker = Validator(expected_data=expected, report=self.report)
         for data in current_data:
             checker.validate(data)
-        return self._errors_or_none()
+        return self.report
 
 
 class DictChecker(BaseValidator):
 
-    def validate(self, current_data):
+    exception = DictCheckerError
+
+    def validate(self, current_data: dict) -> Report:
         """
         Examples:
         >>> from json_checker.core.reports import Report
@@ -244,53 +286,48 @@ class DictChecker(BaseValidator):
 
         # Soft validation:
         >>> soft_checker = DictChecker(
-        >>>     EXPECTED_SCHEMA, soft=True, report=Report(soft=True)
+        >>>     EXPECTED_SCHEMA, report=Report(soft=True)
         >>> )
-        >>> soft_checker.validate(right_data) >> None
-        # with 3 errors, not valid `id`, `items`
-        >>> soft_checker.validate(broken_data) >> Report
+        >>> soft_checker.validate(right_data)  # Report object without errors
+        >>> soft_checker.validate(broken_data)  # Report object with 3 errors
 
         # Hard validation:
         >>> hard_checker = DictChecker(
-        >>>     EXPECTED_SCHEMA, soft=False, report=Report(soft=False)
+        >>>     EXPECTED_SCHEMA, report=Report(soft=False)
         >>> )
-        >>> hard_checker.validate(right_data) >> None
+        >>> hard_checker.validate(right_data)  # Report object without errors
         # with first error, not valid `id`
-        >>> hard_checker.validate(broken_data) >> raise DictCheckerError
+        >>> hard_checker.validate(broken_data)  # raise DictCheckerError
 
         Must be used into `json_checker` only
         :param dict | OrderedDict current_data:
-        :return: Report or None
+        :return: Report
         """
         if current_data == self.expected_data:
-            return
+            return self.report
 
         if not isinstance(current_data, dict):
             message = _format_error_message(dict, current_data)
-            self.report.add_or_rise(message, DictCheckerError)
-            return self._errors_or_none()
+            return self.add_or_raise(message)
 
         validated_keys = []
         current_keys = list(current_data.keys())
         for ex_key, value in filtered_items(self.expected_data, current_keys):
-
             if ex_key not in current_keys:
                 message = 'Missing keys in current response: %s' % ex_key
-                self.report.add_or_rise(message, MissKeyCheckerError)
+                self.report.add_or_raise(message, MissKeyCheckerError)
                 continue
 
             report = Report(soft=True)
             checker = Validator(
                 expected_data=value,
-                soft=self.soft,
                 report=report,
                 ignore_extra_keys=self.ignore_extra_keys
             )
             checker.validate(current_data[ex_key])
             validated_keys.append(ex_key)
             if report.has_errors():
-                message = 'From key="%s": \n\t%s' % (ex_key, report)
-                self.report.add_or_rise(message, DictCheckerError)
+                self.add_or_raise('From key="%s": \n\t%s' % (ex_key, report))
 
         if not self.ignore_extra_keys:
             miss_expected_keys = list(set(current_keys) - set(validated_keys))
@@ -299,9 +336,9 @@ class DictChecker(BaseValidator):
                     'Missing keys in expected schema: '
                     '%s' % ', '.join(miss_expected_keys)
                 )
-                self.report.add_or_rise(message, MissKeyCheckerError)
+                self.report.add_or_raise(message, MissKeyCheckerError)
 
-        return self._errors_or_none()
+        return self.report
 
 
 class OptionalKey(object):
@@ -311,16 +348,16 @@ class OptionalKey(object):
     >>> from json_checker import Checker, TypeCheckerError
 
     >>> expected_schema = {'key1': int, OptionalKey('key2'): str}
-    >>> checker = Checker(expected_data=expected_schema, soft=False)
+    >>> checker = Checker(expected_data=expected_schema)
 
     # if current data have key 'key2' mast be checked else pass
     >>> checker.validate({'key1': 1}) >> {'key1': 1}
     >>> checker.validate({'key1': 1, 'key2': '2'}) >> {'key1': 1, 'key2': '2'}
     # Raise error with message
-    >>> checker.validate({'key1': 1, 'key2': '2'}) >> raise TypeCheckerError
+    >>> checker.validate({'key1': 1, 'key2': 2}) >> raise TypeCheckerError
     """
 
-    def __init__(self, data):
+    def __init__(self, data: str):
         self.expected_data = data
 
     def __repr__(self):
@@ -352,24 +389,27 @@ class Or(BaseOperator):
     >>> checker.validate({"id": 1, "name": "test #1", "items": []})
     >>> {"id": 1, "name": "test #1", "items": []}
 
+    # raise CheckerError with error message
     >>> checker.validate({"id": 1, "name": "test #1", "items": [1, '2']})
-    >>> raise CheckerError  # with errors
     """
 
-    def validate(self, current_data):
-        expected = list(filtered_by_type(self.expected_data, type(current_data)))
+    def validate(self, current_data: Any) -> Report:
+        expected = list(
+            filtered_by_type(self.expected_data, type(current_data))
+        )
         if not expected and self.expected_data:
             report = Report(soft=True)
-            report.add('Not valid data: %s' % _format_error_message(self, current_data))
+            message = _format_error_message(self, current_data)
+            report.add('Not valid data: %s' % message)
             return report
 
         results = {}
         for exp_data in expected:
             report = Report(soft=True)
-            checker = Validator(expected_data=exp_data, soft=True, report=report)
+            checker = Validator(expected_data=exp_data, report=report)
             checker.validate(current_data)
             if not report.has_errors():
-                return
+                return report
             results[len(report)] = report
 
         min_error = min(list(results.keys()))
@@ -386,28 +426,25 @@ class And(BaseOperator):
     >>> from json_checker import Checker, CheckerError
 
     # make simple expected schema
-    >>> EXPECTED_SCHEMA = {
-    >>>     "id": And(int, lambda x: x > 0),
-    >>>     "name": str,
-    >>> }
+    >>> EXPECTED_SCHEMA = {"id": And(int, lambda x: x > 0), "name": str,}
 
     >>> checker = Checker(EXPECTED_SCHEMA)
-
     >>> checker.validate({"id": 1, "name": "test #1"})
     >>> {"id": 1, "name": "test #1"}
 
     >>> checker.validate({"id": -1, "name": "test #1"}) >> CheckerError
     """
 
-    def validate(self, current_data):
+    def validate(self, current_data: Any) -> Report:
         report = Report(soft=True)
         for exp_data in self.expected_data:
-            checker = Validator(expected_data=exp_data, soft=True, report=report)
+            checker = Validator(expected_data=exp_data, report=report)
             checker.validate(current_data)
 
         if report.has_errors():
-            report.errors = ['Not valid data: %s' % _format_error_message(self, current_data)]
-            return report
+            message = _format_error_message(self, current_data)
+            report.errors = ['Not valid data: %s' % message]
+        return report
 
 
 class Validator(BaseValidator):
@@ -427,49 +464,34 @@ class Validator(BaseValidator):
         frozenset: ListChecker,
         dict: DictChecker,
         OrderedDict: DictChecker,
+        FunctionType: FunctionChecker,
     }
 
-    def validate(self, current_data):
+    def validate(self, current_data: Any) -> Report:
         """
 
         :param any current_data:
-        :return: None or Report
+        :return: Report
         """
         if self.expected_data == current_data:
-            return
+            return self.report
 
         validate_method = getattr(self.expected_data, 'validate', None)
         if validate_method:
-            # TODO operators must returned report all time or
-            #  make some for update report
             report = validate_method(current_data)
             if report and report.has_errors():
-                self.report.errors.extend(report.errors)
-            return self._errors_or_none()
+                self.report.merge(report)
+            return self.report
 
         cls_checker = self._validators.get(type(self.expected_data))
         if cls_checker:
             # TODO update report with current indent
             checker = cls_checker(
                 expected_data=self.expected_data,
-                soft=self.soft,
                 ignore_extra_keys=self.ignore_extra_keys,
                 report=self.report,
             )
-            return checker.validate(current_data)
+            checker.validate(current_data)
+            return self.report
 
-        elif callable(self.expected_data):
-            func = self.expected_data
-            try:
-                if not func(current_data):
-                    self.report.add_or_rise(
-                        'function error %s' % _format_data(func),
-                        FunctionCheckerError
-                    )
-                    return self._errors_or_none()
-            except TypeError as e:
-                self.report.add_or_rise(
-                    _format_data(func) + ' %s' % e.__str__(),
-                    FunctionCheckerError
-                )
-                return self._errors_or_none()
+        return self.report
