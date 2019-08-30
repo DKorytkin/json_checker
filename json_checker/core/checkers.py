@@ -1,10 +1,16 @@
-import abc
 import logging
 from types import FunctionType
-from typing import Any, Iterable, Iterator, Callable
+from typing import Any, Iterable, Iterator
 
 from collections import OrderedDict
 
+from json_checker.core.base import (
+    BaseOperator,
+    BaseValidator,
+    format_data,
+    format_error_message,
+    filtered_by_type,
+)
 from json_checker.core.exceptions import (
     DictCheckerError,
     FunctionCheckerError,
@@ -18,21 +24,6 @@ from json_checker.core.reports import Report
 log = logging.getLogger(__name__)
 
 
-def _format_data(data: Any) -> str:
-    if callable(data):
-        return data.__name__
-    elif data is None:
-        return repr(data)
-    return "{} ({})".format(repr(data), type(data).__name__)
-
-
-def _format_error_message(expected_data: Any, current_data: Any) -> str:
-    return "current value %s is not %s" % (
-        _format_data(current_data),
-        _format_data(expected_data),
-    )
-
-
 def filtered_items(expected_data: dict, current_keys: list) -> Iterator:
     for k, v in expected_data.items():
         if isinstance(k, OptionalKey) and k.expected_data not in current_keys:
@@ -43,86 +34,6 @@ def filtered_items(expected_data: dict, current_keys: list) -> Iterator:
             log.debug("Active %s" % k)
             k = k.expected_data
         yield (k, v)
-
-
-def filtered_by_type(expected_data: Iterable, _type: Callable) -> Iterator:
-    for data in expected_data:
-        if isinstance(data, (_type, FunctionType)) or data is _type:
-            yield data
-
-
-class Base(metaclass=abc.ABCMeta):
-    def __init__(
-        self,
-        expected_data: Any,
-        soft: bool = False,
-        ignore_extra_keys: bool = False,
-    ):
-        """
-        :param any expected_data:
-        :param bool soft: False by default
-        :param bool ignore_extra_keys:
-        """
-        self.expected_data = expected_data
-        self.soft = soft
-        self.ignore_extra_keys = ignore_extra_keys
-
-    def __str__(self):
-        return "<%s soft=%s expected=%s>" % (
-            self.__class__.__name__,
-            self.soft,
-            _format_data(self.expected_data),
-        )
-
-    def __repr__(self):
-        return self.__str__()
-
-    @abc.abstractmethod
-    def validate(self, data):
-        pass
-
-
-class BaseOperator(metaclass=abc.ABCMeta):
-    def __init__(self, *data):
-        self.expected_data = data
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return "%s(%s)" % (
-            self.__class__.__name__,
-            ", ".join([_format_data(e) for e in self.expected_data]),
-        )
-
-    @abc.abstractmethod
-    def validate(self, data):
-        pass
-
-
-class BaseValidator(Base):
-
-    exception = TypeCheckerError
-
-    def __init__(
-        self,
-        expected_data: Any,
-        report: Report,
-        ignore_extra_keys: bool = False,
-    ):
-        super(BaseValidator, self).__init__(
-            expected_data=expected_data,
-            soft=report.soft,
-            ignore_extra_keys=ignore_extra_keys,
-        )
-        self.report = report
-
-    def add_or_raise(self, message: str) -> Report:
-        self.report.add_or_raise(message, self.exception)
-        return self.report
-
-    def validate(self, current_data):
-        raise NotImplementedError
 
 
 class TypeChecker(BaseValidator):
@@ -154,11 +65,11 @@ class TypeChecker(BaseValidator):
             not isinstance(self.expected_data, type)
             and current_data != self.expected_data
         ):
-            error = _format_error_message(self.expected_data, current_data)
+            error = format_error_message(self.expected_data, current_data)
             self.add_or_raise(error)
 
         elif not isinstance(current_data, self.expected_data):
-            error = _format_error_message(self.expected_data, current_data)
+            error = format_error_message(self.expected_data, current_data)
             self.add_or_raise(error)
         return self.report
 
@@ -192,10 +103,10 @@ class FunctionChecker(BaseValidator):
         func = self.expected_data
         try:
             if not func(current_data):
-                self.add_or_raise("function error %s" % _format_data(func))
+                self.add_or_raise("function error %s" % format_data(func))
         except TypeError as e:
             # TODO need check???
-            self.add_or_raise(_format_data(func) + " %s" % e.__str__())
+            self.add_or_raise(format_data(func) + " %s" % e.__str__())
         return self.report
 
 
@@ -251,7 +162,7 @@ class ListChecker(BaseValidator):
             # expected [int, str], current [1]
             (1 > len(self.expected_data) > 1)
         ):
-            error = _format_error_message(self.expected_data, current_data)
+            error = format_error_message(self.expected_data, current_data)
             return self.add_or_raise(error)
 
         if len(self.expected_data) == len(current_data):
@@ -308,7 +219,7 @@ class DictChecker(BaseValidator):
             return self.report
 
         if not isinstance(current_data, dict):
-            message = _format_error_message(dict, current_data)
+            message = format_error_message(dict, current_data)
             return self.add_or_raise(message)
 
         validated_keys = []
@@ -399,7 +310,7 @@ class Or(BaseOperator):
         )
         if not expected and self.expected_data:
             report = Report(soft=True)
-            message = _format_error_message(self, current_data)
+            message = format_error_message(self, current_data)
             report.add("Not valid data: %s" % message)
             return report
 
@@ -442,7 +353,7 @@ class And(BaseOperator):
             checker.validate(current_data)
 
         if report.has_errors():
-            message = _format_error_message(self, current_data)
+            message = format_error_message(self, current_data)
             report.errors = ["Not valid data: %s" % message]
         return report
 

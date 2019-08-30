@@ -1,7 +1,8 @@
 import logging
 
+from json_checker.core.base import Base
 from json_checker.core.exceptions import CheckerError
-from json_checker.core.checkers import Base, Validator
+from json_checker.core.checkers import Validator
 from json_checker.core.reports import Report
 
 
