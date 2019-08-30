@@ -33,12 +33,12 @@ def test_dict_checker_positive(schema, soft, current_data, expected_result):
             {"test": int},
             {"test": "666"},
             "From key=\"test\": \n\tcurrent value '666' (str) is not int",
-         ],
+        ],
         [
             {"test": {"test": 1}},
             {"test": {"test": "666"}},
             'From key="test": \n\t'
-            'From key="test": \n\tcurrent value \'666\' (str) is not 1 (int)',
+            "From key=\"test\": \n\tcurrent value '666' (str) is not 1 (int)",
         ],
     ],
 )

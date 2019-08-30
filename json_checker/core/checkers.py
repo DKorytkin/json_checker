@@ -23,24 +23,24 @@ def _format_data(data: Any) -> str:
         return data.__name__
     elif data is None:
         return repr(data)
-    return '{} ({})'.format(repr(data), type(data).__name__)
+    return "{} ({})".format(repr(data), type(data).__name__)
 
 
 def _format_error_message(expected_data: Any, current_data: Any) -> str:
-    return 'current value %s is not %s' % (
+    return "current value %s is not %s" % (
         _format_data(current_data),
-        _format_data(expected_data)
+        _format_data(expected_data),
     )
 
 
 def filtered_items(expected_data: dict, current_keys: list) -> Iterator:
     for k, v in expected_data.items():
         if isinstance(k, OptionalKey) and k.expected_data not in current_keys:
-            log.debug('Skip %s' % k)
+            log.debug("Skip %s" % k)
             continue
 
         if isinstance(k, OptionalKey):
-            log.debug('Active %s' % k)
+            log.debug("Active %s" % k)
             k = k.expected_data
         yield (k, v)
 
@@ -52,7 +52,6 @@ def filtered_by_type(expected_data: Iterable, _type: Callable) -> Iterator:
 
 
 class Base(metaclass=abc.ABCMeta):
-
     def __init__(
         self,
         expected_data: Any,
@@ -69,10 +68,10 @@ class Base(metaclass=abc.ABCMeta):
         self.ignore_extra_keys = ignore_extra_keys
 
     def __str__(self):
-        return '<%s soft=%s expected=%s>' % (
+        return "<%s soft=%s expected=%s>" % (
             self.__class__.__name__,
             self.soft,
-            _format_data(self.expected_data)
+            _format_data(self.expected_data),
         )
 
     def __repr__(self):
@@ -84,7 +83,6 @@ class Base(metaclass=abc.ABCMeta):
 
 
 class BaseOperator(metaclass=abc.ABCMeta):
-
     def __init__(self, *data):
         self.expected_data = data
 
@@ -92,9 +90,9 @@ class BaseOperator(metaclass=abc.ABCMeta):
         return self.__repr__()
 
     def __repr__(self):
-        return '%s(%s)' % (
+        return "%s(%s)" % (
             self.__class__.__name__,
-            ', '.join([_format_data(e) for e in self.expected_data])
+            ", ".join([_format_data(e) for e in self.expected_data]),
         )
 
     @abc.abstractmethod
@@ -115,7 +113,7 @@ class BaseValidator(Base):
         super(BaseValidator, self).__init__(
             expected_data=expected_data,
             soft=report.soft,
-            ignore_extra_keys=ignore_extra_keys
+            ignore_extra_keys=ignore_extra_keys,
         )
         self.report = report
 
@@ -153,8 +151,8 @@ class TypeChecker(BaseValidator):
         :return: Report
         """
         if (
-                not isinstance(self.expected_data, type) and
-                current_data != self.expected_data
+            not isinstance(self.expected_data, type)
+            and current_data != self.expected_data
         ):
             error = _format_error_message(self.expected_data, current_data)
             self.add_or_raise(error)
@@ -194,10 +192,10 @@ class FunctionChecker(BaseValidator):
         func = self.expected_data
         try:
             if not func(current_data):
-                self.add_or_raise('function error %s' % _format_data(func))
+                self.add_or_raise("function error %s" % _format_data(func))
         except TypeError as e:
             # TODO need check???
-            self.add_or_raise(_format_data(func) + ' %s' % e.__str__())
+            self.add_or_raise(_format_data(func) + " %s" % e.__str__())
         return self.report
 
 
@@ -242,11 +240,14 @@ class ListChecker(BaseValidator):
 
         if (
             # expected [int], current 123
-            (not isinstance(current_data, (list, tuple, set, frozenset))) or
+            (not isinstance(current_data, (list, tuple, set, frozenset)))
+            or
             # expected [int], current []
-            (not current_data and self.expected_data) or
+            (not current_data and self.expected_data)
+            or
             # expected [], current [1, 2, 3]
-            (not self.expected_data and current_data) or
+            (not self.expected_data and current_data)
+            or
             # expected [int, str], current [1]
             (1 > len(self.expected_data) > 1)
         ):
@@ -314,7 +315,7 @@ class DictChecker(BaseValidator):
         current_keys = list(current_data.keys())
         for ex_key, value in filtered_items(self.expected_data, current_keys):
             if ex_key not in current_keys:
-                message = 'Missing keys in current response: %s' % ex_key
+                message = "Missing keys in current response: %s" % ex_key
                 self.report.add_or_raise(message, MissKeyCheckerError)
                 continue
 
@@ -322,7 +323,7 @@ class DictChecker(BaseValidator):
             checker = Validator(
                 expected_data=value,
                 report=report,
-                ignore_extra_keys=self.ignore_extra_keys
+                ignore_extra_keys=self.ignore_extra_keys,
             )
             checker.validate(current_data[ex_key])
             validated_keys.append(ex_key)
@@ -332,9 +333,8 @@ class DictChecker(BaseValidator):
         if not self.ignore_extra_keys:
             miss_expected_keys = list(set(current_keys) - set(validated_keys))
             if miss_expected_keys:
-                message = (
-                    'Missing keys in expected schema: '
-                    '%s' % ', '.join(miss_expected_keys)
+                message = "Missing keys in expected schema: " "%s" % ", ".join(
+                    miss_expected_keys
                 )
                 self.report.add_or_raise(message, MissKeyCheckerError)
 
@@ -361,7 +361,7 @@ class OptionalKey(object):
         self.expected_data = data
 
     def __repr__(self):
-        return 'OptionalKey({})'.format(self.expected_data)
+        return "OptionalKey({})".format(self.expected_data)
 
     def __str__(self):
         return self.__repr__()
@@ -400,7 +400,7 @@ class Or(BaseOperator):
         if not expected and self.expected_data:
             report = Report(soft=True)
             message = _format_error_message(self, current_data)
-            report.add('Not valid data: %s' % message)
+            report.add("Not valid data: %s" % message)
             return report
 
         results = {}
@@ -443,7 +443,7 @@ class And(BaseOperator):
 
         if report.has_errors():
             message = _format_error_message(self, current_data)
-            report.errors = ['Not valid data: %s' % message]
+            report.errors = ["Not valid data: %s" % message]
         return report
 
 
@@ -476,7 +476,7 @@ class Validator(BaseValidator):
         if self.expected_data == current_data:
             return self.report
 
-        validate_method = getattr(self.expected_data, 'validate', None)
+        validate_method = getattr(self.expected_data, "validate", None)
         if validate_method:
             report = validate_method(current_data)
             if report and report.has_errors():

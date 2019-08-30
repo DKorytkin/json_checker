@@ -32,7 +32,7 @@ def test_list_checker_positive(list_data, soft, current_data):
             [1, "2", "3"],
             [
                 "current value '2' (str) is not int",
-                "current value '3' (str) is not int"
+                "current value '3' (str) is not int",
             ],
         ),
         ([int], [1, 2, None], ["current value None is not int"]),

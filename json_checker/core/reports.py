@@ -1,16 +1,13 @@
-
-
 class Report:
-
     def __init__(self, soft=True):
         self.soft = soft
         self.errors = []
 
     def __repr__(self):
-        return '<Report soft={} {}>'.format(self.soft, self.errors)
+        return "<Report soft={} {}>".format(self.soft, self.errors)
 
     def __str__(self):
-        return '\n'.join(self.errors)
+        return "\n".join(self.errors)
 
     def __len__(self):
         return len(self.errors)

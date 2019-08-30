@@ -1,5 +1,3 @@
-
-
 class CheckerError(Exception):
     pass
 

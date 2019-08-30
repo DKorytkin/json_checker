@@ -9,12 +9,11 @@ log = logging.getLogger(__name__)
 
 
 class Checker(Base):
-
     def validate(self, data):
-        log.debug('Checker settings: ignore_extra_keys=%s, soft=%s' % (
-            self.ignore_extra_keys,
-            self.soft
-        ))
+        log.debug(
+            "Checker settings: ignore_extra_keys=%s, soft=%s"
+            % (self.ignore_extra_keys, self.soft)
+        )
         report = Report(self.soft)
         checker = Validator(
             expected_data=self.expected_data,

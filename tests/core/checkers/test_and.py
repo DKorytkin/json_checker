@@ -18,11 +18,7 @@ def test_and_operator_string():
 
 
 @pytest.mark.parametrize(
-    "schema, current_data",
-    [
-        [(int, lambda x: x > 0), 1],
-        [(int, bool), True]
-    ],
+    "schema, current_data", [[(int, lambda x: x > 0), 1], [(int, bool), True]]
 )
 def test_operator_and(schema, current_data):
     assert And(*schema).validate(current_data) == ""

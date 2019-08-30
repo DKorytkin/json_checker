@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import codecs
 from setuptools import setup, find_packages
 
@@ -32,9 +30,10 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Topic :: Software Development :: Testing',
+        # 'Programming Language :: Python :: 3.8',
         'Topic :: Software Development :: Libraries',
+        'Topic :: Software Development :: Testing',
+        'Topic :: Software Development :: Quality Assurance',
         'Topic :: Utilities',
         'License :: OSI Approved :: MIT License',
     ],
