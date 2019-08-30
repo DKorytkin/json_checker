@@ -112,6 +112,7 @@ class FunctionChecker(BaseValidator):
 
 class ListChecker(BaseValidator):
 
+    # TODO add tests for all exceptions
     exception = ListCheckerError
 
     def validate(self, current_data: Iterable) -> Report:
