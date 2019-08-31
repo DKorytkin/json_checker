@@ -13,6 +13,7 @@ install:
 script:
   - flake8 json_checker tests
   - black -l 79 -t py36 --check json_checker tests
+  - mypy json_checker
   - pytest --cov-report xml --cov=json_checker
 
 after_success:

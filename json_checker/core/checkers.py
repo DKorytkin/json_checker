@@ -399,7 +399,7 @@ class Validator(BaseValidator):
                 self.report.merge(report)
             return self.report
 
-        cls_checker = self._validators.get(type(self.expected_data))
+        cls_checker = self._validators[type(self.expected_data)]
         # TODO need update report with current indent
         checker = cls_checker(
             expected_data=self.expected_data,

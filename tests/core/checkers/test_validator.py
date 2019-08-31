@@ -1,7 +1,7 @@
 import pytest
 
 from json_checker.core.checkers import Validator, Or, OptionalKey, And
-from json_checker.core.exceptions import TypeCheckerError
+from json_checker.core.exceptions import CheckerError
 from json_checker.core.reports import Report
 
 
@@ -13,7 +13,7 @@ def test_validator_instance_with_default_param():
     assert c.report == soft_report
     assert c.ignore_extra_keys is False
     assert c.soft is True
-    assert c.exception == TypeCheckerError
+    assert c.exception == CheckerError
 
 
 def test_validator_instance_with_custom_param():
@@ -24,7 +24,7 @@ def test_validator_instance_with_custom_param():
     assert c.report == soft_report
     assert c.ignore_extra_keys is True
     assert c.soft is False
-    assert c.exception == TypeCheckerError
+    assert c.exception == CheckerError
 
 
 def test_validator_as_string():

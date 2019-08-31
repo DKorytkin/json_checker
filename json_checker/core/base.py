@@ -1,9 +1,9 @@
 import abc
 from types import FunctionType
-from typing import Any, Iterable, Iterator, Callable
+from typing import Any, Iterable, Iterator, Type
 
 from json_checker.core.reports import Report
-from json_checker.core.exceptions import TypeCheckerError
+from json_checker.core.exceptions import CheckerError
 
 
 def format_data(data: Any) -> str:
@@ -21,7 +21,7 @@ def format_error_message(expected_data: Any, current_data: Any) -> str:
     )
 
 
-def filtered_by_type(expected_data: Iterable, _type: Callable) -> Iterator:
+def filtered_by_type(expected_data: Iterable, _type: Type) -> Iterator:
     for data in expected_data:
         if isinstance(data, (_type, FunctionType)) or data is _type:
             yield data
@@ -78,7 +78,7 @@ class BaseOperator(metaclass=abc.ABCMeta):
 
 class BaseValidator(Base):
 
-    exception = TypeCheckerError
+    exception = CheckerError
 
     def __init__(
         self,
