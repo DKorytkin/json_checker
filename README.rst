@@ -9,7 +9,7 @@ json_checker
     :alt: Cov
     :target: https://codecov.io/gh/DKorytkin/json_checker
 
-.. image:: https://img.shields.io/badge/python-2.7%2C%20%203.4%2C%203.5%2C%203.6-blue.svg
+.. image:: https://img.shields.io/badge/python-3.6%2C%20%203.7%2C%20%203.8-blue.svg
     :alt: Python versions
     :target: https://pypi.python.org/pypi/json_checker
 
@@ -57,10 +57,10 @@ validating a list of entries with personal information:
     >>> from json_checker import Checker
 
     >>> current_data = {'first_key': 1, 'second_key': '2'}
-    >>> expected_data = {'first_key': int, 'second_key': str}
+    >>> expected_schema = {'first_key': int, 'second_key': str}
 
 
-    >>> checker = Checker(expected_data)
+    >>> checker = Checker(expected_schema)
     >>> result = checker.validate(current_data)
 
 
@@ -192,11 +192,11 @@ If you need validate no required dict key, use OptionalKey
 
     >>> from json_checker import Checker, OptionalKey
 
-    >>> expected_dict = {'key1': str, OptionalKey('key2'): int}
-    >>> Checker(expected_dict).validate({'key1': 'value'})
+    >>> expected_schema = {'key1': str, OptionalKey('key2'): int}
+    >>> Checker(expected_schema).validate({'key1': 'value'})
     {'key1': 'value'}
 
-    >>> Checker(expected_dict).validate({'key1': 'value', 'key2': 'value2'})
+    >>> Checker(expected_schema).validate({'key1': 'value', 'key2': 'value2'})
     Traceback (most recent call last):
     ...
     checker_exceptions.DictCheckerError:

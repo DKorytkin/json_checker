@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
-
-
 class CheckerError(Exception):
+    pass
+
+
+class FunctionCheckerError(CheckerError):
     pass
 
 
