@@ -1,7 +1,35 @@
 import pytest
 
 from json_checker.core.checkers import Validator, Or, OptionalKey, And
+from json_checker.core.exceptions import TypeCheckerError
 from json_checker.core.reports import Report
+
+
+def test_validator_instance_with_default_param():
+    schema = [int]
+    soft_report = Report(soft=True)
+    c = Validator(schema, report=soft_report)
+    assert c.expected_data == schema
+    assert c.report == soft_report
+    assert c.ignore_extra_keys is False
+    assert c.soft is True
+    assert c.exception == TypeCheckerError
+
+
+def test_validator_instance_with_custom_param():
+    schema = [int]
+    soft_report = Report(soft=False)
+    c = Validator(schema, report=soft_report, ignore_extra_keys=True)
+    assert c.expected_data == schema
+    assert c.report == soft_report
+    assert c.ignore_extra_keys is True
+    assert c.soft is False
+    assert c.exception == TypeCheckerError
+
+
+def test_validator_as_string():
+    c = Validator(int, report=Report(soft=False))
+    assert str(c) == "<Validator soft=False expected=int>"
 
 
 @pytest.mark.parametrize(
@@ -9,7 +37,12 @@ from json_checker.core.reports import Report
     [
         [lambda x: x > 1, True, 12, ""],
         [lambda x: x > 1, False, 12, ""],
-        [lambda x: x > 1, True, -12, "function error <lambda>"],
+        [
+            lambda x: x > 1,
+            True,
+            -12,
+            "function error: <lambda> with data -12 (int)",
+        ],
         [And(int, lambda x: x > 1), False, 12, ""],
         [And(str, lambda x: x in ("1", "2")), False, "2", ""],
         [And(int, bool), False, True, ""],

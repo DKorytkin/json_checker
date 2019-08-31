@@ -99,20 +99,22 @@ class FunctionChecker(BaseValidator):
         :param any current_data:
         :return: Report
         """
-        # TODO need add tests and docstring
         func = self.expected_data
         try:
             if not func(current_data):
-                self.add_or_raise("function error %s" % format_data(func))
-        except TypeError as e:
-            # TODO need check???
-            self.add_or_raise(format_data(func) + " %s" % e.__str__())
+                self.add_or_raise(
+                    "function error: %s with data %s"
+                    % (format_data(func), format_data(current_data))
+                )
+        except (TypeError, ValueError) as e:
+            self.add_or_raise(
+                "function error: %s with data %s" % (format_data(func), str(e))
+            )
         return self.report
 
 
 class ListChecker(BaseValidator):
 
-    # TODO add tests for all exceptions
     exception = ListCheckerError
 
     def validate(self, current_data: Iterable) -> Report:
@@ -168,14 +170,20 @@ class ListChecker(BaseValidator):
 
         if len(self.expected_data) == len(current_data):
             for exp, cur in list(zip(self.expected_data, current_data)):
-                checker = Validator(expected_data=exp, report=self.report)
+                soft_report = Report(soft=True)
+                checker = Validator(expected_data=exp, report=soft_report)
                 checker.validate(cur)
+                if soft_report.has_errors():
+                    self.add_or_raise(str(soft_report))
             return self.report
 
         expected = self.expected_data[0]
-        checker = Validator(expected_data=expected, report=self.report)
         for data in current_data:
+            soft_report = Report(soft=True)
+            checker = Validator(expected_data=expected, report=soft_report)
             checker.validate(data)
+            if soft_report.has_errors():
+                self.add_or_raise(str(soft_report))
         return self.report
 
 
@@ -183,17 +191,13 @@ class DictChecker(BaseValidator):
 
     exception = DictCheckerError
 
-    def validate(self, current_data: dict) -> Report:
+    def validate(self, current_data: Any) -> Report:
         """
         Examples:
         >>> from json_checker.core.reports import Report
 
         # make simple expected schema and data for that
-        >>> EXPECTED_SCHEMA = {
-        >>>     "id": int,
-        >>>     "name": str,
-        >>>     "items": [int]
-        >>> }
+        >>> EXPECTED_SCHEMA = {"id": int, "name": str, "items": [int]}
         >>> right_data = {"id": 1, "name": "#1", "items": [1, 2, 3]}
         >>> broken_data = {"id": "212", "name": "#1", "items": [1, '2', '3']}
 

@@ -181,14 +181,14 @@ def test_soft_checker_with_errors(expected, current):
         [tuple, True, TypeCheckerError],
         [frozenset, "test", TypeCheckerError],
         [set, [], TypeCheckerError],
-        [[int], ["test"], TypeCheckerError],
+        [[int], ["test"], ListCheckerError],
         [[int], [], ListCheckerError],
         [[int, str], [], ListCheckerError],
         [[int], 122, ListCheckerError],
-        [[bool], [1, 2, 3], TypeCheckerError],
-        [[str], list(range(1000)), TypeCheckerError],
-        [[int], ["1"] * 1000, TypeCheckerError],
-        [[bool], [1, False], TypeCheckerError],
+        [[bool], [1, 2, 3], ListCheckerError],
+        [[str], list(range(1000)), ListCheckerError],
+        [[int], ["1"] * 1000, ListCheckerError],
+        [[bool], [1, False], ListCheckerError],
         [{"key1": int}, {"key1": "1"}, DictCheckerError],
         [
             {"key1": int, "key2": str, "key3": bool},
@@ -241,9 +241,16 @@ def test_checker_with_errors(expected, current, exception):
         Checker(expected, soft=False).validate(current)
 
 
+@pytest.mark.parametrize("soft", (True, False))
+def test_checker_list_dicts_hard_positive(soft):
+    data = [{"key1": 1}, {"key1": 2}, {"key1": 3}]
+    c = Checker([{"key1": int}], soft=soft)
+    assert c.validate(data) == data
+
+
 def test_checker_list_dicts_hard():
-    with pytest.raises(DictCheckerError):
-        c = Checker([{"key1": int}])
+    with pytest.raises(ListCheckerError):
+        c = Checker([{"key1": int}], soft=False)
         c.validate([{"key1": 1}, {"key1": 1}, {"key1": "1"}])
 
 

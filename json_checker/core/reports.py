@@ -22,10 +22,6 @@ class Report:
             other = "\n".join(other)
         return str(self) != str(other)
 
-    def __add__(self, other):
-        self.add(str(other))
-        return self
-
     def __contains__(self, item):
         return str(item) in self.errors
 
@@ -42,6 +38,5 @@ class Report:
 
     def add_or_raise(self, error_message, exception):
         if self.soft:
-            self.add(error_message)
-            return True
+            return self.add(error_message)
         raise exception(error_message)

@@ -5,6 +5,33 @@ from json_checker.core.checkers import TypeChecker
 from json_checker.core.reports import Report
 
 
+def test_type_checker_instance_with_default_param():
+    schema = [int]
+    soft_report = Report(soft=True)
+    c = TypeChecker(schema, report=soft_report)
+    assert c.expected_data == schema
+    assert c.report == soft_report
+    assert c.ignore_extra_keys is False
+    assert c.soft is True
+    assert c.exception == TypeCheckerError
+
+
+def test_type_checker_instance_with_custom_param():
+    schema = [int]
+    soft_report = Report(soft=False)
+    c = TypeChecker(schema, report=soft_report, ignore_extra_keys=True)
+    assert c.expected_data == schema
+    assert c.report == soft_report
+    assert c.ignore_extra_keys is True
+    assert c.soft is False
+    assert c.exception == TypeCheckerError
+
+
+def test_type_checker_as_string():
+    c = TypeChecker(int, report=Report(soft=False))
+    assert str(c) == "<TypeChecker soft=False expected=int>"
+
+
 @pytest.mark.parametrize(
     "type_data, soft, current_data, expected_result",
     [

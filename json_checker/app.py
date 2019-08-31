@@ -1,5 +1,7 @@
 import logging
 
+from typing import Any
+
 from json_checker.core.base import Base
 from json_checker.core.exceptions import CheckerError
 from json_checker.core.checkers import Validator
@@ -10,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class Checker(Base):
-    def validate(self, data):
+    def validate(self, data: Any) -> Any:
         log.debug(
             "Checker settings: ignore_extra_keys=%s, soft=%s"
             % (self.ignore_extra_keys, self.soft)
