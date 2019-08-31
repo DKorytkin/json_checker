@@ -105,6 +105,7 @@ def test_validator_some_dicts():
 @pytest.mark.parametrize(
     "validator_data, current_data, expected_result",
     (
+        (1, 2, "current value 2 (int) is not 1 (int)"),
         (
             And(int, lambda x: x > 1),
             -12,
@@ -179,7 +180,7 @@ def test_validator_positive_message(
     validator = Validator(
         validator_data, report=Report(soft), ignore_extra_keys=False
     )
-    assert expected_result == validator.validate(current_data)
+    assert validator.validate(current_data) == expected_result
 
 
 def test_exist_validators():
