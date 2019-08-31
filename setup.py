@@ -20,6 +20,7 @@ setup(
     license='MIT license',
     py_modules=[
         'json_checker.app',
+        'json_checker.core.base',
         'json_checker.core.checkers',
         'json_checker.core.exceptions',
         'json_checker.core.reports',
@@ -30,7 +31,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
-        # 'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Testing',
         'Topic :: Software Development :: Quality Assurance',
