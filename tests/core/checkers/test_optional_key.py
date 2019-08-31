@@ -4,9 +4,6 @@ from json_checker.app import Checker
 from json_checker.core.checkers import OptionalKey
 
 
-# TODO need more tests for OptionalKey class
-
-
 def test_create_optional_key_instance():
     o = OptionalKey("test_key")
     assert o.expected_data == "test_key"
