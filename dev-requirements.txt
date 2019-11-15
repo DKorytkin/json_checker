@@ -6,7 +6,7 @@ black==19.3b0
 mypy==0.740
 
 
-pytest==5.2.2
+pytest==5.2.3
 pytest-cov==2.8.1
 
 codecov==2.0.15
