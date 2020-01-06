@@ -1,10 +1,10 @@
 
 six>=1.10.0
 
-flake8==3.7.9
-black==19.3b0
-mypy==0.740
 
+black==19.10b0
+flake8==3.7.9
+mypy==0.740
 
 pytest==5.2.2
 pytest-cov==2.8.1
