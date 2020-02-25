@@ -5,11 +5,12 @@ black==19.10b0
 flake8==3.7.9
 mypy==0.761
 
-pytest==5.3.2
+pytest==5.3.5
 pytest-cov==2.8.1
 
+
 codecov==2.0.16
-coverage==5.0.1
+coverage==5.0.3
 
 twine==3.1.1
-wheel==0.33.6
+wheel==0.34.2
