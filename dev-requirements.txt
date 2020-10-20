@@ -9,7 +9,7 @@ pytest-cov==2.10.1
 pytest==6.1.1
 
 codecov==2.1.10
-coverage==5.2.1
+coverage==5.3
 
 twine==3.2.0
 wheel==0.35.1
