@@ -11,5 +11,5 @@ pytest==6.2.2
 codecov==2.1.11
 coverage==5.5
 
-twine==3.3.0
+twine==3.4.0
 wheel==0.36.2
