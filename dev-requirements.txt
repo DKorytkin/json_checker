@@ -6,7 +6,7 @@ mypy==0.812
 flake8==3.9.0
 
 pytest-cov==2.11.1
-pytest==6.2.2
+pytest==6.2.3
 
 codecov==2.1.11
 coverage==5.5
