@@ -2,7 +2,7 @@
 six>=1.10.0
 
 black==21.5b1
-mypy==0.901
+mypy==1.2.0
 flake8==3.9.2
 
 pytest-cov==2.12.1
